@@ -1,0 +1,109 @@
+Total_Population:Total Population
+Total_ICPCPat_Pop:Total ELAN registered person
+Gender_Mannen:Gender Mannen
+Gender_Vrouwen:Gender Vrouwen
+0to20:Age 0to20
+21to40:Age 21to40
+41to60:Age 41to60
+61to80:Age 61to80
+Above80:Age Above80
+MajorEthnicity_NativeDutch:Ethnicity Native Dutch
+MajorEthnicity_Western:Ethnicity Western
+MajorEthnicity_NonWestern:Ethnicity Non-Western
+MinorEthnicity_Marokko:Ethnicity Marokko
+MinorEthnicity_Suriname:Ethnicity Suriname
+MinorEthnicity_Turkije:Ethnicity Turkije
+MinorEthnicity_VoormaligeNederlandseAntillenenAruba:Ethnicity Antillen en Aruba
+Multiperson_Household:Household Multiperson
+HouseholdType_Institutional:Household Institutional
+Employee:Work as Employee
+Unemployment_benefit_user:Unemployment benefit user
+Welfare_benefit_user:Welfare benefit user
+Other_social_benefit_user:Other social benefit user
+Sickness_benefit_user:Sickness benefit user
+Pension_benefit_user:Pension benefit user
+Moving_count_above_1:Moving count above 1
+Lifeevents_count_above_2:Lifeevents count above 2
+Low_Income:Low Income
+Debt_Mortgage:Debt Mortgage person
+Debt_Poor:Statuary Debt person
+Wanbet:Wanbet person
+WMO_user:WMO user
+WLZ_user:WLZ user
+ZVWKHUISARTS_user:ZVWKHUISARTS user
+ZVWKFARMACIE_user:ZVWKFARMACIE user
+ZVWKZIEKENHUIS_user:ZVWKZIEKENHUIS user
+ZVWKOSTENPSYCHO_user:ZVWKOSTENPSYCHO user
+HVZ_Medication_user:HVZ related medication user
+UniqueMed_Count5:Polyfarmacie > 5 ATC
+UniqueMed_Count10:Polyfarmacie > 10 ATC
+DIAB_Medication_user:Diabetes lowering medication user
+BLOEDDRUKV_Medication_user:Blood lowering medication user
+CHOL_Medication_user:Cholestherol lowering medication user
+DIURETICS_Medication_user:DIURETICS medication user
+DIURETICS_RAAS_BETA_Medication_user:DIURETICS, RAAS, and BETA medication user
+OPIOID_Medication_user:OPIOID medication user
+OPIOID_MULYEARS_Medication_user:OPIOID medication user over 2 years
+Opioid_user_no_death:Alive Opioid medication user
+Opioid_user_no_death_primary:Alive Opioid medication user primary
+Opioid_user_2Years_no_death:Alive Opioid medication user over 2 years
+Opioid_user_2Years_no_death_primary: Alive Opioid medication user over 2 years primary
+Opioid_user_no_death_comb:Alive Opioid medication user combined
+Opioid_user_2Years_no_death_comb:Alive Opioid medication user over 2 years combined
+Hypertensie_patients:Hypertensie patients Secondary care
+COPD_patients:COPD patients Secondary care
+Diabetes_I_patients:Diabetes I patients Secondary care
+Diabetes_II_patients:Diabetes II patients Secondary care
+Hartfalen_patients:Hartfalen patients Secondary care
+OMA_patients:OMA patients Secondary care
+Morbus_Parkinson_patients:Morbus Parkinson patients Secondary care
+Heupfractuur_patients:Heupfractuur patients Secondary care
+BMIUP45_patients:BMIUP45 patients Secondary care
+Lung_Cancer_patients:Lung Cancer patients Secondary care
+Colon_Cancer_patients:Colon Cancer patients Secondary care
+Back_pain_patients:Back pain patients Secondary care
+ICPC_Hartfalen_patients:ICPC Hartfalen patients Primary care
+Medication_Dependency_patients:Medication Dependency patients Primary care 
+Alcohol_Dependency_patients:Alcohol Dependency patients Primary care
+Loneliness_patients:Loneliness patients Primary care
+ICPC_Obesitas_patients:Obesitas patients Primary care
+BMI_NormalWeight:BMI NormalWeight
+BMI_Obese:BMI Obese
+BMI_OverWeight:BMI OverWeight
+BMI_UnderWeight:BMI UnderWeight
+Medication_Dependency_3Years_patients:Medication Dependency patients over 3 years Primary care
+Medication_Dependency_5Years_patients:Medication Dependency patients over 5 years Primary care
+Alcohol_Dependency_3Years_patients:Alcohol Dependency patients over 3 years Primary care
+Alcohol_Dependency_5Years_patients:Alcohol Dependency patients over 5 years Primary care
+Loneliness_3Years_patients:Loneliness patients over 3 years Primary care
+Loneliness_5Years_patients:Loneliness patients over 5 years Primary care
+Hartfalen_PrimarynSecondary_patients:Hartfalen patients Primary and Secondary
+Primary_care_patients_in_Secondary_care:Proxy Primary care patients in Secondary care
+Proxy_Primary_care_refer_to_Secondary_care:Proxy Primary care refer to Secondary care
+JGDHULP_user:JGDHULP Person
+GEDETINEERDENTAB:GEDETINEERDENTAB
+SHNTAB:SHNTAB
+HBOPL_Low:Education HBOPL Low
+HBOPL_Mid:Education HBOPL Mid
+HBOPL_High:Education HBOPL High
+HGOPL_Low:Education HGOPL Low
+HGOPL_Mid:Education HGOPL Mid
+HGOPL_High:Education HGOPL High
+AGE_MEAN:Average Age
+Income_MEAN:Average Income
+Moving_Count_MEAN:Average Moving Address
+Lifeevents_Count_MEAN:Average Live Events
+UniqueMed_Count_MEAN:Average Unique Medication Code
+ZVWKOSTENTOTAAL_MEAN:Average Total Healthcare Cost
+ZVWKHUISARTS_MEAN:Average Primary care Cost
+ZVWKHUISARTS_NO_REG_MEAN:Average Primary care Services Cost
+ZVWKZIEKENHUIS_MEAN:Average Secondary care Cost
+ZVWKFARMACIE_MEAN:Average Pharmaceuticals Cost
+ZVWKOSTENPSYCHO_MEAN:Average Psychological care Cost
+ICU_Referral:GP to ICU Referral
+Ambulance_Referral:GP to Ambulance Referral
+Cardiologist_Referral:GP to Cardiologist Referral
+Lab_Referral:GP to Lab Referral
+Physiologie_Referral:GP to Physiologie Referral
+Primary_care_patients_in_Secondary_care:GP patient in Secondary Care
+Proxy_Primary_care_refer_to_Secondary_care:Proxy GP Referral to Secondary Care

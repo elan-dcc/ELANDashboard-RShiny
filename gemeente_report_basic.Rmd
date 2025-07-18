@@ -1,0 +1,918 @@
+---
+title: "ELAN Dashboard - Basic Municipality Analysis Report"
+author: "ELAN Data Center"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+params:
+  n: NA
+  selected_variable: NA
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(scales)
+library(tidyr)
+
+# Custom CSS for consistent styling
+cat('
+<style>
+body {
+  font-family: Arial, Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #0e1d6b;
+  font-weight: 600;
+}
+.table {
+  font-size: 14px;
+}
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.alert-info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+.alert-success {
+  color: #3c763d;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+.alert-warning {
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+}
+</style>
+')
+
+# Initialize variables
+selected_municipalities <- if(exists("params") && !is.null(params$n)) {
+  params$n
+} else {
+  character(0)
+}
+
+# Function to get latest year for specific variables
+get_latest_year_for_variables <- function(data, variables) {
+  if(nrow(data) == 0) return(0)
+  if(inherits(data, "sf")) {
+    data <- as.data.frame(data)
+  }
+  existing_variables <- variables[variables %in% names(data)]
+  if(length(existing_variables) == 0) return(0)
+  filtered_data <- data %>%
+    filter(if_any(all_of(existing_variables), ~!is.na(.)))
+  if(nrow(filtered_data) == 0) return(0)
+  return(max(filtered_data$YEAR, na.rm = TRUE))
+}
+
+# Get selected municipalities data with year-specific filtering
+if (length(selected_municipalities) > 0 && exists("states_gmc")) {
+  states_gmc_df <- as.data.frame(states_gmc)
+  demographic_vars <- c("Total_Population", "Total_ICPCPat_Pop", "AGE_MEAN", "Income_MEAN", 
+                        "Age0to20", "Age21to40", "Age41to60", "Age61to80", "AgeAbove80")
+  healthcare_cost_vars <- c("ZVWKOSTENTOTAAL_MEAN", "ZVWKZIEKENHUIS_MEAN", "ZVWKHUISARTS_MEAN", "ZVWKFARMACIE_MEAN")
+  primary_care_vars <- c("ZVWKHUISARTS_user")
+  medication_vars <- c("UniqueMed_Count5")
+  latest_demographic_year <- get_latest_year_for_variables(states_gmc_df, demographic_vars)
+  latest_healthcare_cost_year <- get_latest_year_for_variables(states_gmc_df, healthcare_cost_vars)
+  latest_primary_care_year <- get_latest_year_for_variables(states_gmc_df, primary_care_vars)
+  latest_medication_year <- get_latest_year_for_variables(states_gmc_df, medication_vars)
+  demographic_data <- states_gmc_df %>%
+    filter(GMN %in% selected_municipalities, YEAR == latest_demographic_year) %>%
+    select(GMN, YEAR, all_of(demographic_vars)) %>%
+    distinct(GMN, .keep_all = TRUE)
+  if(nrow(demographic_data) == 0) {
+    demographic_data <- data.frame(GMN = selected_municipalities, YEAR = latest_demographic_year)
+  }
+  healthcare_cost_data <- states_gmc_df %>%
+    filter(GMN %in% selected_municipalities, YEAR == latest_healthcare_cost_year) %>%
+    select(GMN, all_of(healthcare_cost_vars)) %>%
+    distinct(GMN, .keep_all = TRUE)
+  if(nrow(healthcare_cost_data) == 0) {
+    healthcare_cost_data <- data.frame(GMN = selected_municipalities)
+  }
+  primary_care_data <- states_gmc_df %>%
+    filter(GMN %in% selected_municipalities, YEAR == latest_primary_care_year) %>%
+    select(GMN, all_of(primary_care_vars)) %>%
+    distinct(GMN, .keep_all = TRUE)
+  if(nrow(primary_care_data) == 0) {
+    primary_care_data <- data.frame(GMN = selected_municipalities)
+  }
+  medication_data <- states_gmc_df %>%
+    filter(GMN %in% selected_municipalities, YEAR == latest_medication_year) %>%
+    select(GMN, all_of(medication_vars)) %>%
+    distinct(GMN, .keep_all = TRUE)
+  if(nrow(medication_data) == 0) {
+    medication_data <- data.frame(GMN = selected_municipalities)
+  }
+  selected_data <- demographic_data %>%
+    left_join(healthcare_cost_data, by = "GMN") %>%
+    left_join(primary_care_data, by = "GMN") %>%
+    left_join(medication_data, by = "GMN")
+  time_series_data <- states_gmc_df %>%
+    filter(GMN %in% selected_municipalities) %>%
+    distinct(GMN, YEAR, .keep_all = TRUE) %>%
+    arrange(YEAR)
+} else {
+  if(exists("states_gmc")) {
+    states_gmc_df <- as.data.frame(states_gmc)
+    sample_municipalities <- unique(states_gmc_df$GMN)[1:3]
+    demographic_vars <- c("Total_Population", "Total_ICPCPat_Pop", "AGE_MEAN", "Income_MEAN", 
+                          "Age0to20", "Age21to40", "Age41to60", "Age61to80", "AgeAbove80")
+    healthcare_cost_vars <- c("ZVWKOSTENTOTAAL_MEAN", "ZVWKZIEKENHUIS_MEAN", "ZVWKHUISARTS_MEAN", "ZVWKFARMACIE_MEAN")
+    primary_care_vars <- c("ZVWKHUISARTS_user")
+    medication_vars <- c("UniqueMed_Count5")
+    latest_demographic_year <- get_latest_year_for_variables(states_gmc_df, demographic_vars)
+    latest_healthcare_cost_year <- get_latest_year_for_variables(states_gmc_df, healthcare_cost_vars)
+    latest_primary_care_year <- get_latest_year_for_variables(states_gmc_df, primary_care_vars)
+    latest_medication_year <- get_latest_year_for_variables(states_gmc_df, medication_vars)
+    demographic_data <- states_gmc_df %>%
+      filter(GMN %in% sample_municipalities, YEAR == latest_demographic_year) %>%
+      select(GMN, YEAR, all_of(demographic_vars)) %>%
+      distinct(GMN, .keep_all = TRUE)
+    if(nrow(demographic_data) == 0) {
+      demographic_data <- data.frame(GMN = sample_municipalities, YEAR = latest_demographic_year)
+    }
+    healthcare_cost_data <- states_gmc_df %>%
+      filter(GMN %in% sample_municipalities, YEAR == latest_healthcare_cost_year) %>%
+      select(GMN, all_of(healthcare_cost_vars)) %>%
+      distinct(GMN, .keep_all = TRUE)
+    if(nrow(healthcare_cost_data) == 0) {
+      healthcare_cost_data <- data.frame(GMN = sample_municipalities)
+    }
+    primary_care_data <- states_gmc_df %>%
+      filter(GMN %in% sample_municipalities, YEAR == latest_primary_care_year) %>%
+      select(GMN, all_of(primary_care_vars)) %>%
+      distinct(GMN, .keep_all = TRUE)
+    if(nrow(primary_care_data) == 0) {
+      primary_care_data <- data.frame(GMN = sample_municipalities)
+    }
+    medication_data <- states_gmc_df %>%
+      filter(GMN %in% sample_municipalities, YEAR == latest_medication_year) %>%
+      select(GMN, all_of(medication_vars)) %>%
+      distinct(GMN, .keep_all = TRUE)
+    if(nrow(medication_data) == 0) {
+      medication_data <- data.frame(GMN = sample_municipalities)
+    }
+    selected_data <- demographic_data %>%
+      left_join(healthcare_cost_data, by = "GMN") %>%
+      left_join(primary_care_data, by = "GMN") %>%
+      left_join(medication_data, by = "GMN")
+    time_series_data <- states_gmc_df %>%
+      filter(GMN %in% sample_municipalities) %>%
+      distinct(GMN, YEAR, .keep_all = TRUE) %>%
+      arrange(YEAR)
+  } else {
+    selected_data <- data.frame()
+    time_series_data <- data.frame()
+  }
+}
+
+# Store latest years for use in titles
+latest_years <- list(
+  demographic = if(exists("latest_demographic_year")) latest_demographic_year else 0,
+  healthcare_cost = if(exists("latest_healthcare_cost_year")) latest_healthcare_cost_year else 0,
+  primary_care = if(exists("latest_primary_care_year")) latest_primary_care_year else 0,
+  medication = if(exists("latest_medication_year")) latest_medication_year else 0
+)
+
+# Calculate summary statistics
+if (nrow(selected_data) > 0) {
+  cost_vars_available <- c("ZVWKOSTENTOTAAL_MEAN", "ZVWKZIEKENHUIS_MEAN", "ZVWKHUISARTS_MEAN", "ZVWKFARMACIE_MEAN")
+  cost_vars_available <- cost_vars_available[cost_vars_available %in% names(selected_data)]
+  summary_stats <- selected_data %>%
+    summarise(
+      total_population = sum(Total_Population, na.rm = TRUE),
+      total_elan_patients = sum(Total_ICPCPat_Pop * Total_Population, na.rm = TRUE),
+      avg_age = mean(AGE_MEAN, na.rm = TRUE),
+      avg_income = mean(Income_MEAN, na.rm = TRUE),
+      avg_total_healthcare_cost = if("ZVWKOSTENTOTAAL_MEAN" %in% names(selected_data)) mean(ZVWKOSTENTOTAAL_MEAN, na.rm = TRUE) else 0,
+      avg_secondary_care_cost = if("ZVWKZIEKENHUIS_MEAN" %in% names(selected_data)) mean(ZVWKZIEKENHUIS_MEAN, na.rm = TRUE) else 0,
+      avg_primary_care_cost = if("ZVWKHUISARTS_MEAN" %in% names(selected_data)) mean(ZVWKHUISARTS_MEAN, na.rm = TRUE) else 0,
+      primary_care_users = sum(ZVWKHUISARTS_user * Total_Population, na.rm = TRUE),
+      primary_care_non_users = sum(Total_Population - (ZVWKHUISARTS_user * Total_Population), na.rm = TRUE),
+      poly_pharmacy_users = sum(UniqueMed_Count5 * Total_Population, na.rm = TRUE),
+      avg_medication_cost = if("ZVWKFARMACIE_MEAN" %in% names(selected_data)) mean(ZVWKFARMACIE_MEAN, na.rm = TRUE) else 0
+    )
+  summary_stats <- summary_stats %>%
+    mutate(across(everything(), ~ifelse(is.na(.), 0, .)))
+} else {
+  summary_stats <- data.frame(
+    total_population = 0,
+    total_elan_patients = 0,
+    avg_age = 0,
+    avg_income = 0,
+    avg_total_healthcare_cost = 0,
+    avg_secondary_care_cost = 0,
+    avg_primary_care_cost = 0,
+    primary_care_users = 0,
+    primary_care_non_users = 0,
+    poly_pharmacy_users = 0,
+    avg_medication_cost = 0
+  )
+}
+```
+
+# ELAN Dashboard - Basic Municipality Analysis Report
+
+<div style="text-align: center; margin-bottom: 30px; padding: 20px; background: linear-gradient(135deg, #f6fafe 0%, #e8f4fd 100%); border-radius: 10px;">
+  <h1 style="color: #0e1d6b; margin-bottom: 10px; font-size: 32px; font-weight: bold;">ELAN Dashboard</h1>
+  <h2 style="color: #007CC2; margin-bottom: 10px; font-size: 24px;">Basic Municipality Analysis Report</h2>
+  <p style="color: #666; font-size: 16px; margin: 0;">Health Campus Den Haag</p>
+  <p style="color: #666; font-size: 14px; margin-top: 10px;">Generated on `r Sys.Date()`</p>
+</div>
+
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007CC2;">
+  <h2 style="color: #0e1d6b; margin-bottom: 15px;">📊 Executive Summary</h2>
+  <p style="color: #333; line-height: 1.6; margin-bottom: 10px;">
+    This basic analysis examines the selected municipalities focusing on key healthcare and demographic indicators. The report provides insights into population characteristics and healthcare utilization patterns using the most recent available data for each indicator type.
+  </p>
+  <p style="color: #333; line-height: 1.6;">
+    <strong>Data Coverage:</strong><br>
+    • Demographics and Population: `r if(latest_years$demographic > 0) latest_years$demographic else "N/A"`<br>
+    • Healthcare Costs: `r if(latest_years$healthcare_cost > 0) latest_years$healthcare_cost else "N/A"`<br>
+    • Primary Care Utilization: `r if(latest_years$primary_care > 0) latest_years$primary_care else "N/A"`<br>
+    • Medication Usage: `r if(latest_years$medication > 0) latest_years$medication else "N/A"`<br>
+    <strong>Municipalities Analyzed:</strong> `r if(length(unique(selected_data$GMN)) > 0) paste(unique(selected_data$GMN), collapse = ", ") else "No municipalities selected"`
+  </p>
+  `r if(is.null(params$n) || length(params$n) == 0) '<div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 15px; border-left: 4px solid #ffc107;"><p style="color: #856404; margin: 0;"><strong>Note:</strong> No specific municipalities were selected. This report shows sample data from the first 3 available municipalities for demonstration purposes.</p></div>' else ''`
+</div>
+
+## Geographic Overview
+
+```{r choropleth-map, echo=FALSE, fig.width=12, fig.height=8, warning=FALSE}
+# Load required libraries for mapping
+library(ggplot2)
+library(sf)
+library(dplyr)
+library(RColorBrewer)
+library(scales)
+
+# Create static choropleth map function
+create_static_choropleth_map <- function(spatial_data, selected_areas, variable_name = "Total_ICPCPat_Pop", area_type = "gemeente") {
+  
+  # Check if we have spatial data
+  if (!exists("spatial_data") || nrow(spatial_data) == 0) {
+    # Create a simple placeholder plot
+    plot(1, 1, type = "n", axes = FALSE, xlab = "", ylab = "")
+    text(1, 1, "No spatial data available", cex = 1.5, col = "gray")
+    return()
+  }
+  
+  # Convert to data frame if it's sf object
+  if (inherits(spatial_data, "sf")) {
+    spatial_df <- as.data.frame(spatial_data)
+  } else {
+    spatial_df <- spatial_data
+  }
+  
+  # Get the latest year with data
+  if ("YEAR" %in% names(spatial_df)) {
+    latest_year <- max(spatial_df$YEAR, na.rm = TRUE)
+    map_data <- spatial_df %>% filter(YEAR == latest_year)
+  } else {
+    map_data <- spatial_df
+  }
+  
+  # If no selected areas, use all available areas
+  if (length(selected_areas) == 0) {
+    if (area_type == "wijk") {
+      selected_areas <- unique(map_data$WKN)[1:min(3, length(unique(map_data$WKN)))]
+    } else {
+      selected_areas <- unique(map_data$GMN)[1:min(3, length(unique(map_data$GMN)))]
+    }
+  }
+  
+  # Check if variable exists
+  if (!variable_name %in% names(map_data)) {
+    variable_name <- "Total_ICPCPat_Pop"  # Default fallback
+  }
+  
+  # Filter data for selected areas
+  if (area_type == "wijk") {
+    filtered_data <- map_data %>% filter(WKN %in% selected_areas)
+    name_col <- "WKN"
+    muni_col <- "GMN"
+  } else {
+    filtered_data <- map_data %>% filter(GMN %in% selected_areas)
+    name_col <- "GMN"
+    muni_col <- "GMN"
+  }
+  
+  # If no data after filtering, create placeholder
+  if (nrow(filtered_data) == 0) {
+    plot(1, 1, type = "n", axes = FALSE, xlab = "", ylab = "")
+    text(1, 1, "No data available for selected areas", cex = 1.5, col = "gray")
+    return()
+  }
+  
+  # Get spatial data for plotting
+  if (area_type == "wijk" && exists("states_wkc")) {
+    plot_data <- states_wkc %>% filter(YEAR == latest_year)
+    plot_data$selected <- plot_data$WKN %in% selected_areas
+    plot_data$highlight <- plot_data$WKN %in% selected_areas
+  } else if (area_type == "gemeente" && exists("states_gmc")) {
+    plot_data <- states_gmc %>% filter(YEAR == latest_year)
+    plot_data$selected <- plot_data$GMN %in% selected_areas
+    plot_data$highlight <- plot_data$GMN %in% selected_areas
+  } else {
+    # Create placeholder if no spatial data
+    plot(1, 1, type = "n", axes = FALSE, xlab = "", ylab = "")
+    text(1, 1, "No spatial data available", cex = 1.5, col = "gray")
+    return()
+  }
+  
+  # Create color palette based on variable values
+  var_values <- plot_data[[variable_name]]
+  var_values <- var_values[!is.na(var_values)]
+  
+  if (length(var_values) == 0) {
+    # If no valid values, use a simple color scheme
+    plot_data$color_value <- 1
+    color_palette <- "Blues"
+  } else {
+    # Create color scale based on variable values
+    plot_data$color_value <- plot_data[[variable_name]]
+    color_palette <- "Blues"
+  }
+  
+  # Get the proper variable label for the legend
+  if (exists("var_def_label_dict") && variable_name %in% names(var_def_label_dict)) {
+    variable_label <- var_def_label_dict[[variable_name]]
+  } else {
+    variable_label <- variable_name
+  }
+  
+  # Create the map
+  p <- ggplot() +
+    # Base map - all areas with variable values
+    geom_sf(data = plot_data, 
+            aes(fill = color_value),
+            color = "#666666", 
+            size = 0.5) +
+    # Highlight selected areas with yellow border
+    geom_sf(data = plot_data %>% filter(highlight), 
+            fill = "yellow", 
+            color = "#ff8f00", 
+            size = 2) +
+    # Color scale for variable values with improved legend
+    scale_fill_gradientn(
+      colors = brewer.pal(9, color_palette),
+      name = variable_label,
+      labels = comma,
+      na.value = "#f0f0f0"
+    ) +
+    # Theme settings with bigger legend
+    theme_minimal() +
+    theme(
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      plot.title = element_text(size = 18, face = "bold", color = "#0e1d6b"),
+      plot.subtitle = element_text(size = 14, color = "#666"),
+      legend.position = "bottom",
+      legend.title = element_text(size = 14, face = "bold"),
+      legend.text = element_text(size = 12),
+      legend.key.height = unit(1.5, "cm"),
+      legend.key.width = unit(2, "cm"),
+      legend.margin = margin(t = 10, b = 10, l = 10, r = 10)
+    ) +
+    labs(
+      title = paste("Geographic Distribution -", variable_label),
+      subtitle = paste("Selected areas highlighted in yellow | Year:", latest_year),
+      x = NULL,
+      y = NULL
+    )
+  
+  return(p)
+}
+
+# Determine which variable to show on the map
+# Use the selected variable from the dashboard control panel
+if (exists("params") && !is.null(params$selected_variable)) {
+  # Use the variable selected in the dashboard
+  map_variable <- params$selected_variable
+} else if (nrow(selected_data) > 0) {
+  # Try to find a good variable to display from available data
+  potential_vars <- c("Total_ICPCPat_Pop", "AGE_MEAN", "Income_MEAN", 
+                      "ZVWKOSTENTOTAAL_MEAN", "ZVWKZIEKENHUIS_MEAN", "ZVWKHUISARTS_MEAN",
+                      "UniqueMed_Count5", "Gender_Mannen", "Gender_Vrouwen")
+  
+  map_variable <- NULL
+  for (var in potential_vars) {
+    if (var %in% names(selected_data) && any(!is.na(selected_data[[var]]))) {
+      map_variable <- var
+      break
+    }
+  }
+  
+  if (is.null(map_variable)) {
+    map_variable <- "Total_ICPCPat_Pop"  # Better default fallback
+  }
+} else {
+  map_variable <- "Total_ICPCPat_Pop"
+}
+
+# Get the proper variable label for the legend
+if (exists("var_def_label_dict") && map_variable %in% names(var_def_label_dict)) {
+  variable_label <- var_def_label_dict[[map_variable]]
+} else {
+  variable_label <- map_variable
+}
+
+# Create the map
+if (exists("states_gmc") && length(selected_municipalities) > 0) {
+  # Use selected municipalities
+  selected_areas <- selected_municipalities
+} else if (exists("states_gmc")) {
+  # Use sample municipalities
+  states_gmc_df <- as.data.frame(states_gmc)
+  selected_areas <- unique(states_gmc_df$GMN)[1:min(3, length(unique(states_gmc_df$GMN)))]
+} else {
+  selected_areas <- character(0)
+}
+
+# Create the choropleth map with improved legend
+choropleth_map <- create_static_choropleth_map(states_gmc, selected_areas, map_variable, "gemeente")
+print(choropleth_map)
+```
+
+<div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
+  <p style="color: #856404; margin: 0;">
+    <strong>Map Legend:</strong> The map above shows the geographic distribution of the analyzed municipalities with color-coded variable values. 
+    Selected municipalities are highlighted with a <strong>yellow border</strong>, while the color intensity represents the variable values. 
+    Darker colors indicate higher values, lighter colors indicate lower values.
+  </p>
+</div>
+
+## Key Findings
+
+<div style="background-color: #e8f4fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007CC2;">
+  <h3 style="color: #0e1d6b; margin-bottom: 15px;">🎯 Key Findings</h3>
+  <ul style="color: #333; line-height: 1.6;">
+    <li><strong>Population Overview:</strong> `r if(summary_stats$total_population > 0) paste("Total population of", format(summary_stats$total_population, big.mark=","), "residents across", length(unique(selected_data$GMN)), "municipalities") else "Population data unavailable"`</li>
+    <li><strong>ELAN Patients:</strong> `r if(summary_stats$total_elan_patients > 0) paste("Total ELAN patients:", format(round(summary_stats$total_elan_patients), big.mark=","), "(", round(summary_stats$total_elan_patients / summary_stats$total_population * 100, 1), "% of population)") else "ELAN patient data unavailable"`</li>
+    <li><strong>Healthcare Costs:</strong> `r if(summary_stats$avg_total_healthcare_cost > 0) paste("Average total healthcare cost: €", format(round(summary_stats$avg_total_healthcare_cost), big.mark=",")) else "Healthcare cost data unavailable"`</li>
+    <li><strong>Primary Care:</strong> `r if(summary_stats$primary_care_users > 0) paste("Primary care users:", format(round(summary_stats$primary_care_users), big.mark=","), "(", round(summary_stats$primary_care_users / summary_stats$total_population * 100, 1), "% of population)") else "Primary care data unavailable"`</li>
+    <li><strong>Primary Care:</strong> `r if(summary_stats$primary_care_non_users > 0) paste("Non Primary care users:", format(round(summary_stats$primary_care_non_users), big.mark=","), "(", round(summary_stats$primary_care_non_users / summary_stats$total_population * 100, 1), "% of population)") else "Primary care data unavailable"`</li>
+    <li><strong>Polypharmacy:</strong> `r if(summary_stats$poly_pharmacy_users > 0) paste("Polypharmacy users (≥5 meds):", format(round(summary_stats$poly_pharmacy_users), big.mark=","), "(", round(summary_stats$poly_pharmacy_users / summary_stats$total_population * 100, 1), "% of population)") else "Polypharmacy data unavailable"`</li>
+    <li><strong>Demographic Profile:</strong> `r if(summary_stats$avg_age > 0) paste("Average age of", round(summary_stats$avg_age, 1), "years") else "Age data unavailable"`</li>
+    <li><strong>Economic Status:</strong> `r if(summary_stats$avg_income > 0) paste("Average income of €", format(round(summary_stats$avg_income), big.mark=",")) else "Income data unavailable"`</li>
+  </ul>
+</div>
+
+---
+
+## Detailed Analysis
+
+### 1. ELAN Patient Trends
+
+```{r elan-trends, echo=FALSE, fig.width=10, fig.height=6}
+# Create ELAN patient trends
+if (nrow(time_series_data) > 0) {
+  required_cols <- c("GMN", "YEAR", "Total_ICPCPat_Pop", "Total_Population")
+  missing_cols <- setdiff(required_cols, names(time_series_data))
+  if (length(missing_cols) == 0) {
+    trend_data <- as.data.frame(time_series_data) %>%
+      select(GMN, YEAR, Total_ICPCPat_Pop, Total_Population) %>%
+      mutate(
+        Total_ICPCPat_Pop = ifelse(is.na(Total_ICPCPat_Pop), 0, Total_ICPCPat_Pop),
+        Total_Population = ifelse(is.na(Total_Population), 0, Total_Population),
+        ELAN_Patients = Total_ICPCPat_Pop * Total_Population
+      )
+    if (nrow(trend_data) > 0) {
+      elan_plot <- trend_data %>%
+        ggplot(aes(x = YEAR, y = ELAN_Patients, color = GMN)) +
+        geom_line(size = 1) +
+        geom_point(size = 2) +
+        labs(
+          title = "ELAN Patient Trends",
+          subtitle = "Number of ELAN Patients Over Time",
+          x = "Year",
+          y = "ELAN Patients",
+          color = "Municipality"
+        ) +
+        theme_minimal() +
+        theme(
+          plot.title = element_text(size = 18, face = "bold", color = "#0e1d6b"),
+          plot.subtitle = element_text(size = 14, color = "#666"),
+          legend.position = "bottom"
+        ) +
+        scale_color_brewer(palette = "Set1") +
+        scale_y_continuous(labels = comma)
+      print(elan_plot)
+    } else {
+      cat("No valid trend data available for plotting.")
+    }
+  } else {
+    cat("Missing required columns for trend analysis:", paste(missing_cols, collapse = ", "))
+  }
+} else {
+  cat("No time series data available for trend analysis.")
+}
+```
+
+```{r elan-table, echo=FALSE}
+# Create ELAN patient summary table
+if (nrow(selected_data) > 0) {
+  required_cols <- c("GMN", "Total_Population", "Total_ICPCPat_Pop", "AGE_MEAN", "Income_MEAN")
+  missing_cols <- setdiff(required_cols, names(selected_data))
+  if (length(missing_cols) == 0) {
+    elan_summary_table <- as.data.frame(selected_data) %>%
+      select(GMN, Total_Population, Total_ICPCPat_Pop, AGE_MEAN, Income_MEAN) %>%
+      mutate(
+        Total_Population = ifelse(is.na(Total_Population), 0, Total_Population),
+        Total_ICPCPat_Pop = ifelse(is.na(Total_ICPCPat_Pop), 0, Total_ICPCPat_Pop),
+        AGE_MEAN = ifelse(is.na(AGE_MEAN), 0, AGE_MEAN),
+        Income_MEAN = ifelse(is.na(Income_MEAN), 0, Income_MEAN),
+        ELAN_Patients = Total_ICPCPat_Pop * Total_Population,
+        ELAN_Rate = ifelse(Total_Population > 0, Total_ICPCPat_Pop, 0)
+      ) %>%
+      arrange(desc(ELAN_Rate)) %>%
+      select(GMN, Total_Population, ELAN_Patients, ELAN_Rate, AGE_MEAN, Income_MEAN)
+    if (nrow(elan_summary_table) > 0 && ncol(elan_summary_table) == 6) {
+      elan_summary_table_formatted <- elan_summary_table %>%
+        mutate(
+          Total_Population = format(Total_Population, big.mark = ",", scientific = FALSE),
+          ELAN_Patients = format(round(ELAN_Patients, 0), big.mark = ",", scientific = FALSE),
+          ELAN_Rate = sprintf("%.2f", ELAN_Rate *100),
+          AGE_MEAN = sprintf("%.2f", AGE_MEAN),
+          Income_MEAN = format(round(Income_MEAN, 0), big.mark = ",", scientific = FALSE)
+        )
+      kable(elan_summary_table_formatted,
+            col.names = c("Municipality", "Total Population", "ELAN Patients", "ELAN Rate (%)", "Average Age", "Average Income (€)"),
+            caption = paste("ELAN Patient Summary by Municipality", if(latest_years$demographic > 0) paste("(", latest_years$demographic, ")") else "")) %>%
+        kable_styling(bootstrap_options = c("striped", "hover"),
+                      full_width = FALSE,
+                      position = "center") %>%
+        column_spec(1, bold = TRUE, color = "#0e1d6b") %>%
+        row_spec(0, bold = TRUE, color = "white", background = "#007CC2")
+    } else {
+      cat("Unable to create ELAN summary table due to data structure issues.")
+    }
+  } else {
+    cat("Missing required columns for ELAN summary table:", paste(missing_cols, collapse = ", "))
+  }
+} else {
+  cat("No data available for ELAN summary table.")
+}
+```
+
+**Key Trends:**
+- **ELAN Patients:** `r if(nrow(time_series_data) > 0 && !all(is.na(time_series_data$Total_ICPCPat_Pop))) paste("ELAN patients", if(max(time_series_data$Total_ICPCPat_Pop * time_series_data$Total_Population * time_series_data$Total_Population / 100, na.rm=TRUE) > min(time_series_data$Total_ICPCPat_Pop * time_series_data$Total_Population * time_series_data$Total_Population / 100, na.rm=TRUE)) "increased" else "decreased", "from", format(round(min(time_series_data$Total_ICPCPat_Pop * time_series_data$Total_Population * time_series_data$Total_Population / 100, na.rm=TRUE)), big.mark=","), "to", format(round(max(time_series_data$Total_ICPCPat_Pop * time_series_data$Total_Population * time_series_data$Total_Population / 100, na.rm=TRUE)), big.mark=","), "patients") else "No ELAN patient trend data available"`
+- **Peak Utilization:** `r if(nrow(time_series_data) > 0 && !all(is.na(time_series_data$Total_ICPCPat_Pop * time_series_data$Total_Population))) paste("Highest ELAN patient count observed in", time_series_data$YEAR[which.max(time_series_data$Total_ICPCPat_Pop * time_series_data$Total_Population * time_series_data$Total_Population / 100)]) else "No utilization data available"`
+
+### 2. Age Distribution Analysis
+
+```{r age-distribution, echo=FALSE, fig.width=10, fig.height=6}
+# Create age distribution analysis
+if (nrow(selected_data) > 0) {
+  age_vars <- c("Age0to20", "Age21to40", "Age41to60", "Age61to80", "AgeAbove80")
+  age_vars_available <- age_vars[age_vars %in% names(selected_data)]
+  if (length(age_vars_available) > 0) {
+    age_data <- as.data.frame(selected_data) %>%
+      select(GMN, all_of(age_vars_available)) %>%
+      mutate(
+        across(all_of(age_vars_available), ~ifelse(is.na(.), 0, . * 100))
+      ) %>%
+      gather(key = "Age_Group", value = "Population", -GMN) %>%
+      mutate(
+        Age_Group = factor(Age_Group,
+                          levels = c("Age0to20", "Age21to40", "Age41to60", "Age61to80", "AgeAbove80"),
+                          labels = c("0-20", "21-40", "41-60", "61-80", "80+"))
+      )
+    if (nrow(age_data) > 0) {
+      age_plot <- age_data %>%
+        ggplot(aes(x = Age_Group, y = Population, fill = GMN)) +
+        geom_bar(stat = "identity", position = "dodge") +
+        labs(
+          title = "Age Distribution Across Municipalities",
+          subtitle = "Population by Age Groups",
+          x = "Age Group",
+          y = "Population (%)",
+          fill = "Municipality"
+        ) +
+        theme_minimal() +
+        theme(
+          plot.title = element_text(size = 18, face = "bold", color = "#0e1d6b"),
+          plot.subtitle = element_text(size = 14, color = "#666"),
+          legend.position = "bottom"
+        ) +
+        scale_fill_brewer(palette = "Set2") +
+        scale_y_continuous(labels = comma)
+      print(age_plot)
+    } else {
+      cat("No valid age distribution data available for plotting.")
+    }
+  } else {
+    cat("No age category variables available in the dataset.")
+  }
+} else {
+  cat("No data available for age distribution analysis.")
+}
+```
+
+```{r age-table, echo=FALSE}
+# Create age distribution summary table
+if (nrow(selected_data) > 0) {
+  age_vars <- c("Age0to20", "Age21to40", "Age41to60", "Age61to80", "AgeAbove80")
+  age_vars_available <- age_vars[age_vars %in% names(selected_data)]
+  if (length(age_vars_available) > 0) {
+    age_summary_table <- as.data.frame(selected_data) %>%
+      select(GMN, Total_Population, all_of(age_vars_available)) %>%
+      mutate(
+        across(all_of(age_vars_available), ~ifelse(is.na(.), 0, . * 100))
+      ) %>%
+      arrange(desc(Age0to20))
+    if (nrow(age_summary_table) > 0) {
+      age_summary_table_formatted <- age_summary_table %>%
+        mutate(
+          across(all_of(age_vars_available), ~sprintf("%.2f", .))
+        )
+      col_names <- c("Municipality", "Total Population")
+      if("Age0to20" %in% age_vars_available) col_names <- c(col_names, "Age 0-20 (%)")
+      if("Age21to40" %in% age_vars_available) col_names <- c(col_names, "Age 21-40 (%)")
+      if("Age41to60" %in% age_vars_available) col_names <- c(col_names, "Age 41-60 (%)")
+      if("Age61to80" %in% age_vars_available) col_names <- c(col_names, "Age 61-80 (%)")
+      if("AgeAbove80" %in% age_vars_available) col_names <- c(col_names, "Age 80+ (%)")
+      kable(age_summary_table_formatted,
+            col.names = col_names,
+            caption = paste("Age Distribution Summary by Municipality", if(latest_years$demographic > 0) paste("(", latest_years$demographic, ")") else "")) %>%
+        kable_styling(bootstrap_options = c("striped", "hover"),
+                      full_width = FALSE,
+                      position = "center") %>%
+        column_spec(1, bold = TRUE, color = "#0e1d6b") %>%
+        row_spec(0, bold = TRUE, color = "white", background = "#007CC2")
+    } else {
+      cat("Unable to create age summary table due to data structure issues.")
+    }
+  } else {
+    cat("No age category variables available for summary table.")
+  }
+} else {
+  cat("No data available for age summary table.")
+}
+```
+
+### 3. Healthcare Cost Analysis
+
+```{r healthcare-costs, echo=FALSE, fig.width=10, fig.height=6}
+# Create healthcare cost analysis
+if (nrow(selected_data) > 0) {
+  # Check which cost variables are available
+  cost_vars <- c("ZVWKOSTENTOTAAL_MEAN", "ZVWKZIEKENHUIS_MEAN", "ZVWKHUISARTS_MEAN", "ZVWKFARMACIE_MEAN")
+  available_cost_vars <- cost_vars[cost_vars %in% names(selected_data)]
+  
+  if (length(available_cost_vars) > 0) {
+    # Prepare data for plotting
+    cost_data <- selected_data %>%
+      select(GMN, all_of(available_cost_vars)) %>%
+      pivot_longer(cols = all_of(available_cost_vars), 
+                   names_to = "Cost_Type", 
+                   values_to = "Cost") %>%
+      filter(!is.na(Cost))
+    
+    if (nrow(cost_data) > 0) {
+      # Create cost labels
+      cost_labels <- c(
+        "ZVWKOSTENTOTAAL_MEAN" = "Total Healthcare Cost",
+        "ZVWKZIEKENHUIS_MEAN" = "Secondary Care Cost",
+        "ZVWKHUISARTS_MEAN" = "Primary Care Cost",
+        "ZVWKFARMACIE_MEAN" = "Pharmacy Cost"
+      )
+      
+      cost_plot <- cost_data %>%
+        mutate(Cost_Type = cost_labels[Cost_Type]) %>%
+        ggplot(aes(x = GMN, y = Cost, fill = Cost_Type)) +
+        geom_col(position = "dodge") +
+        labs(
+          title = "Healthcare Costs by Municipality",
+          x = "Municipality",
+          y = "Average Cost (€)",
+          fill = "Cost Type"
+        ) +
+        theme_minimal() +
+        theme(
+          plot.title = element_text(size = 18, face = "bold", color = "#0e1d6b"),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "bottom"
+        ) +
+        scale_fill_brewer(palette = "Set1") +
+        scale_y_continuous(labels = comma)
+      
+      print(cost_plot)
+    } else {
+      cat("No valid cost data available for plotting.")
+    }
+  } else {
+    cat("No healthcare cost variables available in the dataset.")
+  }
+} else {
+  cat("No data available for healthcare cost analysis.")
+}
+```
+
+### 4. Primary Care Utilization
+
+```{r primary-care, echo=FALSE, fig.width=10, fig.height=6}
+# Create primary care utilization chart
+if (nrow(selected_data) > 0 && "ZVWKHUISARTS_user" %in% names(selected_data)) {
+  primary_care_data <- selected_data %>%
+    select(GMN, ZVWKHUISARTS_user, Total_Population) %>%
+    filter(!is.na(ZVWKHUISARTS_user) & !is.na(Total_Population)) %>%
+    mutate(
+      Users = ZVWKHUISARTS_user * Total_Population,
+      Non_Users = Total_Population - Users,
+      User_Percentage = ZVWKHUISARTS_user * 100
+    )
+  
+  if (nrow(primary_care_data) > 0) {
+    # Create percentage chart
+    percentage_plot <- primary_care_data %>%
+      ggplot(aes(x = reorder(GMN, User_Percentage), y = User_Percentage, fill = GMN)) +
+      geom_col() +
+      labs(
+        title = "Primary Care Utilization by Municipality",
+        x = "Municipality",
+        y = "Percentage of Population Using Primary Care (%)"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 18, face = "bold", color = "#0e1d6b"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none"
+      ) +
+      scale_fill_brewer(palette = "Set1") +
+      scale_y_continuous(labels = function(x) paste0(x, "%"))
+    
+    print(percentage_plot)
+  } else {
+    cat("No valid primary care data available for plotting.")
+  }
+} else {
+  cat("Primary care data not available.")
+}
+```
+
+### 5. Medication Usage Analysis
+
+```{r medication-usage, echo=FALSE, fig.width=10, fig.height=6}
+# Create medication usage analysis
+if (nrow(selected_data) > 0 && "UniqueMed_Count5" %in% names(selected_data)) {
+  medication_data <- selected_data %>%
+    select(GMN, UniqueMed_Count5, Total_Population) %>%
+    filter(!is.na(UniqueMed_Count5) & !is.na(Total_Population)) %>%
+    mutate(
+      Polypharmacy_Users = UniqueMed_Count5 * Total_Population,
+      Non_Polypharmacy_Users = Total_Population - Polypharmacy_Users,
+      Polypharmacy_Percentage = UniqueMed_Count5 * 100
+    )
+  
+  if (nrow(medication_data) > 0) {
+    # Create polypharmacy chart
+    polypharmacy_plot <- medication_data %>%
+      ggplot(aes(x = reorder(GMN, Polypharmacy_Percentage), y = Polypharmacy_Percentage, fill = GMN)) +
+      geom_col() +
+      labs(
+        title = "Polypharmacy Usage by Municipality",
+        subtitle = "Percentage of Population Using 5+ Medications",
+        x = "Municipality",
+        y = "Percentage of Population (%)"
+      ) +
+      theme_minimal() +
+      theme(
+        plot.title = element_text(size = 18, face = "bold", color = "#0e1d6b"),
+        plot.subtitle = element_text(size = 14, color = "#666"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none"
+      ) +
+      scale_fill_brewer(palette = "Set1") +
+      scale_y_continuous(labels = function(x) paste0(x, "%"))
+    
+    print(polypharmacy_plot)
+  } else {
+    cat("No valid medication data available for plotting.")
+  }
+} else {
+  cat("Medication data not available.")
+}
+```
+
+---
+
+## Data Summary Tables
+
+### Municipality Overview
+
+```{r municipality-overview, echo=FALSE}
+if (nrow(selected_data) > 0) {
+  overview_table <- selected_data %>%
+    select(GMN, Total_Population, AGE_MEAN, Income_MEAN) %>%
+    mutate(
+      Total_Population = format(Total_Population, big.mark = ","),
+      AGE_MEAN = round(AGE_MEAN, 1),
+      Income_MEAN = format(round(Income_MEAN), big.mark = ",")
+    ) %>%
+    rename(
+      Municipality = GMN,
+      Population = Total_Population,
+      `Average Age` = AGE_MEAN,
+      `Average Income (€)` = Income_MEAN
+    )
+  
+  kable(overview_table, format = "html", align = c("l", "r", "r", "r")) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+    column_spec(1, bold = TRUE)
+} else {
+  cat("No data available for municipality overview.")
+}
+```
+
+### Healthcare Indicators Summary
+
+```{r healthcare-summary, echo=FALSE}
+if (nrow(selected_data) > 0) {
+  # Check which healthcare variables are available
+  healthcare_vars <- c("ZVWKOSTENTOTAAL_MEAN", "ZVWKZIEKENHUIS_MEAN", "ZVWKHUISARTS_MEAN", "ZVWKFARMACIE_MEAN", "ZVWKHUISARTS_user", "UniqueMed_Count5")
+  available_healthcare_vars <- healthcare_vars[healthcare_vars %in% names(selected_data)]
+  
+  if (length(available_healthcare_vars) > 0) {
+    healthcare_summary <- selected_data %>%
+      select(GMN, all_of(available_healthcare_vars)) %>%
+      mutate(across(all_of(available_healthcare_vars), ~round(., 2)))
+    
+    # Rename columns for better display
+    colnames(healthcare_summary) <- c("Municipality", 
+                                      "Total Healthcare Cost" = "ZVWKOSTENTOTAAL_MEAN",
+                                      "Secondary Care Cost" = "ZVWKZIEKENHUIS_MEAN",
+                                      "Primary Care Cost" = "ZVWKHUISARTS_MEAN",
+                                      "Pharmacy Cost" = "ZVWKFARMACIE_MEAN",
+                                      "Primary Care Users (%)" = "ZVWKHUISARTS_user",
+                                      "Polypharmacy Users (%)" = "UniqueMed_Count5")[colnames(healthcare_summary)]
+    
+    kable(healthcare_summary, format = "html", align = c("l", rep("r", length(available_healthcare_vars)))) %>%
+      kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE) %>%
+      column_spec(1, bold = TRUE)
+  } else {
+    cat("No healthcare indicators available in the dataset.")
+  }
+} else {
+  cat("No data available for healthcare summary.")
+}
+```
+
+---
+
+## Data Quality and Limitations
+
+<div style="background-color: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+  <h3 style="color: #856404; margin-bottom: 15px;">⚠️ Data Quality Notes</h3>
+  <ul style="color: #856404; line-height: 1.6;">
+    <li><strong>Data Source:</strong> ELAN Dashboard - Municipality-level aggregated data</li>
+    <li><strong>Geographic Coverage:</strong> ELAN Region Municipalities</li>
+    <li><strong>Time Period:</strong> Available years vary by municipality and indicator</li>
+    <li><strong>Missing Data:</strong> Some variables may have missing values for certain years or municipalities</li>
+    <li><strong>Definitions:</strong> Variable definitions are based on ELAN data dictionary</li>
+    <li><strong>Aggregation Level:</strong> Data is aggregated at the municipality level, not individual patient level</li>
+  </ul>
+</div>
+
+---
+
+## Contact Information
+
+<div style="background-color: #e8f4fd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007CC2;">
+  <h3 style="color: #0e1d6b; margin-bottom: 15px;">📞 Contact Information</h3>
+  <p style="color: #333; line-height: 1.6;">
+    For questions about this report or the ELAN Dashboard, please contact:
+  </p>
+  <p style="color: #333; line-height: 1.6; margin-top: 10px;">
+    <strong>ELAN DCC</strong><br>
+    Email: <a href="mailto:ELAN.DCC@lumc.nl" style="color: #007CC2;">ELAN.DCC@lumc.nl</a><br>
+    Website: <a href="https://www.lumc.nl/over-het-lumc/partners/elan/" target="_blank" style="color: #007CC2;">https://www.lumc.nl/over-het-lumc/partners/elan/</a>
+  </p>
+</div>
+
+---
+
+*Report generated on `r Sys.Date()` at `r Sys.time()`* 
+*Report generated on `r Sys.Date()` at `r Sys.time()`* 

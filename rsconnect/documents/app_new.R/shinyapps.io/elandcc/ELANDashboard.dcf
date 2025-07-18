@@ -1,0 +1,12 @@
+name: ELANDashboard
+title: ELANDashboard
+username: elandcc
+account: elandcc
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15079322
+bundleId: 10620208
+url: https://elandcc.shinyapps.io/ELANDashboard/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

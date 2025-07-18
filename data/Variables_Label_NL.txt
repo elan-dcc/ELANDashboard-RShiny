@@ -1,0 +1,110 @@
+Total_Population:Totale bevolking
+Total_ICPCPat_Pop:Totaal ELAN-geregistreerde personen
+Gender_Mannen:Gender Mannen
+Gender_Vrouwen:Gender Vrouwen
+Age0to20:Leeftijd 0to20
+Age21to40:Leeftijd 21to40
+Age41to60:Leeftijd 41to60
+Age61to80:Leeftijd 61to80
+AgeAbove80:Leeftijd boven 80
+MajorEthnicity_NativeDutch:Etniciteit Native Dutch
+MajorEthnicity_Western:Etniciteit Westers
+MajorEthnicity_NonWestern:Etniciteit Niet-Westers
+MajorEthnicity_Other:Etniciteit niet Nederlands
+MinorEthnicity_Marokko:Etniciteit Marokko
+MinorEthnicity_Suriname:Etniciteit Suriname
+MinorEthnicity_Turkije:Ethnicity Turkije
+MinorEthnicity_VoormaligeNederlandseAntillenenAruba:Ethnicity Antillen en Aruba
+Multiperson_Household:Huishouden Multiperson
+HouseholdType_Institutional:Huishouden Institutioneel
+Employee:Werk als werknemer
+Unemployment_benefit_user:Werkloosheids uitkerings gebruiker
+Welfare_benefit_user:Werkgelegenheids uitkerings gebruiker
+Other_social_benefit_user:Andere sociale uitkerings gebruiker
+Sickness_benefit_user:Ziekte uitkerings gebruiker
+Pension_benefit_user:Pensioen uitkerings gebruiker
+Moving_count_above_1:Verplaatsingstelling boven 1
+Lifeevents_count_above_2:Levens gebeurtenissentelling boven 2
+Low_Income:Laag inkomen
+Debt_Mortgage:Schuld Hypotheek persoon
+Debt_Poor:Wettelijke schuld persoon
+Wanbet:Wanbet persoon
+WMO_user:WMO gebruiker
+WLZ_user:WLZ gebruiker
+ZVWKHUISARTS_user:ZVWKHUISARTS gebruiker
+ZVWKFARMACIE_user:ZVWKFARMACIE gebruiker
+ZVWKZIEKENHUIS_user:ZVWKZIEKENHUIS gebruiker
+ZVWKOSTENPSYCHO_user:ZVWKOSTENPSYCHO gebruiker
+HVZ_Medication_user:HVZ gerelateerde medicatie gebruiker
+UniqueMed_Count5:Polyfarmacie > 5 ATC
+UniqueMed_Count10:Polyfarmacie > 10 ATC
+DIAB_Medication_user:Gebruiker van diabetes verlagende medicatie
+BLOEDDRUKV_Medication_user:Gebruiker van bloed verlagende medicatie
+CHOL_Medication_user:Gebruiker van cholesterol verlagende medicatie
+DIURETICS_Medication_user:Gebruiker van DIURETICS-medicatie
+DIURETICS_RAAS_BETA_Medication_user:Gebruiker van DIURETICS-, RAAS- en BETA-medicatie
+OPIOID_Medication_user:Gebruiker van Opioide medicatie
+OPIOID_MULYEARS_Medication_user:Gebruiker van Opioide medicatie langer dan 2 jaar
+Opioid_user_no_death:In leven Gebruiker van Opioide medicatie
+Opioid_user_no_death_primary:In leven Opioide medicatie gebruiker primair
+Opioid_user_2Years_no_death:In leven Opioide medicatie gebruiker langer dan 2 jaar
+Opioid_user_2Years_no_death_primary:In leven Opioide medicatie gebruiker langer dan 2 jaar primair
+Opioid_user_no_death_comb:In leven Opioide medicatie gebruiker gecombineerd
+Opioid_user_2Years_no_death_comb:In leven Opioide medicatie gebruiker langer dan 2 jaar gecombineerd
+Hypertensie_patients:Hypertensie patienten Secundaire zorg
+COPD_patients:COPD patienten Secundaire zorg
+Diabetes_I_patients:Diabetes I patienten Secundaire zorg
+Diabetes_II_patients:Diabetes II patienten Secundaire zorg
+Hartfalen_patients:Hartfalen patienten Secundaire zorg
+OMA_patients:OMA patienten Secundaire zorg
+Morbus_Parkinson_patients:Morbus Parkinson patienten Secundaire zorg
+Heupfractuur_patients:Heupfractuur patienten Secundaire zorg
+BMIUP45_patients:BMIUP45 patienten Secundaire zorg
+Lung_Cancer_patients:Longkanker patienten Secundaire zorg
+Colon_Cancer_patients:Colonkanker patienten Secundaire zorg
+Back_pain_patients:Rugpijn patienten Secundaire zorg
+ICPC_Hartfalen_patients:ICPC Hartfalen patienten Eerstelijnszorg
+Medication_Dependency_patients:Medicatie afhankelijke patienten Eerstelijnszorg
+Alcohol_Dependency_patients:Alcohol afhankelijke patienten Eerstelijnszorg
+Loneliness_patients:Eenzaamheids patienten Eerstelijnszorg zorg
+ICPC_Obesitas_patients:Obesitas patienten Eerstelijnszorg
+BMI_NormalWeight:BMI Normaal Gewicht
+BMI_Obese:BMI Obese
+BMI_OverWeight:BMI Overgewicht
+BMI_UnderWeight:BMI Ondergewicht
+Medication_Dependency_3Years_patients:Medicatie-afhankelijke patienten ouder dan 3 jaar Eerstelijnszorg
+Medication_Dependency_5Years_patients:Medicatie-afhankelijke patienten ouder dan 5 jaar Eerstelijnszorg
+Alcohol_Dependency_3Years_patients:Alcohol-afhankelijke patienten ouder dan 3 jaar Eerstelijnszorg
+Alcohol_Dependency_5Years_patients:Alcohol-afhankelijke patienten ouder dan 5 jaar Eerstelijnszorg
+Loneliness_3Years_patients:Eenzaamheids patienten meer dan 3 jaar Eerstelijnszorg
+Loneliness_5Years_patients:Eenzaamheids patienten meer dan 5 jaar Eerstelijnszorg
+Hartfalen_PrimarynSecondary_patients:Hartfalen patienten Eerstelijns- en Tweedelijnszorg
+Primary_care_patients_in_Secondary_care:Proxy Eerstelijnszorg patienten in Tweedelijnszorg
+Proxy_Primary_care_refer_to_Secondary_care:Proxy Eerstelijnszorg verwijst naar Tweedelijnszorg
+JGDHULP_user:JGDHULP Persoon
+GEDETINEERDENTAB:GEDETINEERDENTAB
+SHNTAB:SHNTAB
+HBOPL_Low:Opleiding HBOPL Laag
+HBOPL_Mid:Opleiding HBOPL Gemiddeld
+HBOPL_High:Opleiding HBOPL Hoog
+HGOPL_Low:Onderwijs HGOPL Laag
+HGOPL_Mid:Onderwijs HGOPL Midden
+HGOPL_High:Onderwijs HGOPL Hoog
+AGE_MEAN:Gemiddelde leeftijd
+Income_MEAN:Gemiddeld inkomen
+Moving_Count_MEAN:Gemiddeld verhuisadres
+Lifeevents_Count_MEAN:Gemiddelde live-evenementen
+UniqueMed_Count_MEAN:Gemiddelde unieke medicijncode
+ZVWKOSTENTOTAAL_MEAN:Gemiddelde totale kosten voor gezondheidszorg
+ZVWKHUISARTS_MEAN:Gemiddelde kosten voor eerstelijnszorg
+ZVWKHUISARTS_NO_REG_MEAN:Gemiddelde kosten voor eerstelijnszorg geleverde diensten
+ZVWKZIEKENHUIS_MEAN:Gemiddelde kosten voor tweedelijnszorg
+ZVWKFARMACIE_MEAN:Gemiddelde kosten voor geneesmiddelen
+ZVWKOSTENPSYCHO_MEAN:Gemiddelde kosten voor psychologische zorg
+ICU_Referral:GP naar ICU Verwijzing
+Ambulance_Referral:GP naar Ambulance Verwijzing
+Cardiologist_Referral:GP naar Cardioloog Verwijzing
+Lab_Referral:GP naar Lab Verwijzing
+Physiologie_Referral:GP naar Fysiologie Verwijzing
+Primary_care_patients_in_Secondary_care:GP patient in Secundaire Zorg
+Proxy_Primary_care_refer_to_Secondary_care:Proxy GP Verwijzing naar Secundaire Zorg

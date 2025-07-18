@@ -1,0 +1,7 @@
+k-means-constrained scikit-learn kmodes xgboost torchvision geomloss torch matplotlib seaborn scipy mlxtend umap utils umap-learn geopandas geojson folium plotly dash xlsxwriter openpyxl xlrd pyexcel statsmodels pyspssio spss-converter pyreadstat simplejson sas7bdat pysummaries pyreadr
+
+conda install pip jupyterlab notebook spyder
+
+C:\Users\fq_am\Downloads\environment9002.txt
+
+synthcity

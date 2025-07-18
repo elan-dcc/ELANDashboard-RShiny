@@ -1,0 +1,84 @@
+Total Population
+Gender Mannen
+Gender Vrouwen
+0to20
+21to40
+41to60
+61to80
+Above80
+MajorEthnicity Native Dutch
+MajorEthnicity Western
+MajorEthnicity Non-Western
+MinorEthnicity Marokko
+MinorEthnicity Suriname
+MinorEthnicity Turkije
+MinorEthnicity Voormalige Nederlandse Antillen en Aruba
+Multiperson Household
+HouseholdType Institutional
+Employee
+Unemployment benefit user
+Welfare benefit user
+Other social benefit user
+Sickness benefit user
+Pension benefit user
+Moving count above 1
+Lifeevents count above 2
+Low Income
+Debt Mortgage
+Debt Poor
+Wanbet
+WMO user
+WLZ user
+ZVWKHUISARTS user
+ZVWKFARMACIE user
+ZVWKZIEKENHUIS user
+ZVWKOSTENPSYCHO user
+HVZ Medication user
+UniqueMed Count >=5
+UniqueMed Count >=10
+DIAB Medication user
+BLOEDDRUKV Medication user
+CHOL Medication user
+DIURETICS Medication user
+DIURETICS RAAS BETA Medication user
+OPIOID Medication user
+OPIOID MULYEARS Medication user
+Hypertensie patients
+COPD patients
+Diabetes I patients
+Diabetes II patients
+Hartfalen patients
+OMA patients
+Morbus Parkinson patients
+Heupfractuur patients
+BMIUP45 patients
+Lung Cancer patients
+Colon Cancer patients
+Back pain patients
+ICPC Hartfalen patients
+Medication Dependency patients 
+Alcohol Dependency patients
+Loneliness patients
+ICPC Obesitas patients
+BMI NormalWeight
+BMI Obese
+BMI OverWeight
+BMI UnderWeight
+Medication Dependency 3Years patients
+Medication Dependency 5Years patients
+Alcohol Dependency 3Years patients
+Alcohol Dependency 5Years patients  
+Loneliness 3Years patients
+Loneliness 5Years patients
+Hartfalen PrimarynSecondary patients
+Primary care patients in Secondary care
+Proxy Primary care refer to Secondary care
+JGDHULP user
+GEDETINEERDENTAB
+SHNTAB
+HBOPL Low
+HBOPL Mid
+HBOPL High
+HGOPL Low
+HGOPL Mid
+HGOPL High
