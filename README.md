@@ -1,6 +1,10 @@
 # ELAN Dashboard - Modular Structure
 
-This document explains the new modular structure of the ELAN Dashboard, where the Wijken and Gemeente tabs have been separated into their own components for better organization and maintainability.
+Link for the current version of the dashboard:
+
+https://elandcc.shinyapps.io/ELANDashboard/
+
+This document explains the new structure of the ELAN Dashboard.
 
 ## 📁 New File Structure
 
@@ -47,11 +51,6 @@ Project 1/
 source("app_new.R")
 ```
 
-### Option 2: Use the Original App
-```r
-# Run the original app (still works)
-source("app.R")
-```
 
 ## 📋 Component Breakdown
 
