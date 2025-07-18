@@ -129,6 +129,4 @@ source("app.R")
    - Automatic API documentation
    - Component usage examples
 
-English
-Please explain in ${lang}: "${selection}"
 
