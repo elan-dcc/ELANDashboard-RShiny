@@ -2,25 +2,28 @@
 # install.packages("RCurl")
 library(shiny)    # for shiny apps
 library(leaflet)  # renderLeaflet function
-library(RSocrata)
+# library(RSocrata)  # Removed - not used and may cause WebR compatibility issues
 library(dplyr)
 library(bslib)
 library(bsicons)
 
 library(sf)
 library(magrittr)
-library(geojsonio)
+# library(geojsonio)  # Removed - not needed, using sf::st_write for GeoJSON
 library(htmltools)
 library(htmlwidgets)
-library(stringi)
+# library(stringi)  # Removed - not used and may cause WebR compatibility issues
 library(RColorBrewer)
-library(reactlog)
+# library(reactlog)  # Removed - not used and may cause WebR compatibility issues
 library(ggplot2)
 library(ggiraph)
 library(tidyverse)
 library(foreach)
-library(RCurl)
+# library(RCurl)  # Removed - not used and may cause WebR compatibility issues
 library(DT)
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
 
 # Source dashboard components
 source("dashboard/global_dashboard.R")

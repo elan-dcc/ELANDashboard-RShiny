@@ -2,19 +2,19 @@
 # install.packages("bsicons")
 library(shiny)    # for shiny apps
 library(leaflet)  # renderLeaflet function
-library(RSocrata)
+# library(RSocrata)  # Removed - not used and may cause WebR compatibility issues
 library(dplyr)
 library(bslib)
 library(bsicons)
 
 library(sf)
 library(magrittr)
-library(geojsonio)
+# library(geojsonio)  # Removed - not needed, using sf::st_write for GeoJSON
 library(htmltools)
 library(htmlwidgets)
-library(stringi)
+# library(stringi)  # Removed - not used and may cause WebR compatibility issues
 library(RColorBrewer)
-library(shinyBS)
+# library(shinyBS)  # Removed - not used and may cause WebR compatibility issues
 library(ggiraph)
 library(shinyjs)
 

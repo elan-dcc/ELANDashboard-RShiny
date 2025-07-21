@@ -3,6 +3,10 @@
 
 # Load required libraries for themes
 library(ggplot2)
+library(tibble)
+library(dplyr)
+library(readxl)
+library(sf)
 
 # Helper function to optimize shapefile size
 optimize_shapefile <- function(shapefile_path, tolerance = 100, precision = 6) {
@@ -123,10 +127,15 @@ area_dict <- list("s-gravenhage"="s-Gravenhage",
 )
 
 # Data loading
-path = 'data/'
+# Use sample data for Shinylive export
+if (dir.exists("data_sample/")) {
+  path = 'data_sample/'
+} else {
+  path = 'data/'
+}
 
 # Read shapefile for gemeenten
-geo_df_gem <- st_read(paste0(path, 'gemeenten_2023_v1.shp')) 
+geo_df_gem <- st_read(paste0(path, 'gemeenten_2023_v1.geojson')) 
 geo_df_gem <- geo_df_gem[geo_df_gem$H2O == 'NEE', ]
 geo_df_gem <- geo_df_gem %>%
   select(GM_CODE, GM_NAAM, geometry, H2O)
@@ -189,7 +198,7 @@ df_gem[columns] <- round(df_gem[columns], 4)
 # Column names are now fixed by the fix_column_names function
 
 # Read shapefile for wijken
-geo_df <- st_read(file.path(path, 'wijk_2023_v0.shp'))
+geo_df <- st_read(file.path(path, 'wijk_2023_v0.geojson'))
 geo_df <- st_simplify(geo_df, dTolerance = 50)
 geo_df <- st_transform(geo_df, crs = 4326)
 geo_df <- geo_df %>% rename(WKC = WK_CODE)

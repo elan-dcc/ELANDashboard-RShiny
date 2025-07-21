@@ -626,6 +626,57 @@ gemeente_server <- function(input, output, session, current_language = reactive(
   output$gemeente_report <- downloadHandler(
     filename = "gemeente report.html",
     content = function(file) {
+      # Check if rmarkdown is available (for WebR compatibility)
+      if (!requireNamespace("rmarkdown", quietly = TRUE)) {
+        # Create a simple HTML report as fallback
+        selected_gemeentes <- if(length(input$gem_drop_selected_gemeente_id) > 0) {
+          input$gem_drop_selected_gemeente_id
+        } else if(length(gem_selected_bar$name) > 0) {
+          gem_selected_bar$name
+        } else {
+          character(0)
+        }
+        
+        selected_variable <- if(!is.null(input$gem_drop_var_id) && input$gem_drop_var_id != "") {
+          input$gem_drop_var_id
+        } else {
+          "Total_ICPCPat_Pop"
+        }
+        
+        # Create simple HTML content
+        html_content <- paste0('
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>ELAN Dashboard - Basic Municipality Analysis Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #0e1d6b; }
+            .info { background-color: #f0f0f0; padding: 10px; margin: 10px 0; }
+            .warning { background-color: #fff3cd; padding: 10px; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <h1>ELAN Dashboard - Basic Municipality Analysis Report</h1>
+          <div class="info">
+            <h2>Report Information</h2>
+            <p><strong>Generated on:</strong> ', Sys.Date(), '</p>
+            <p><strong>Selected Variable:</strong> ', selected_variable, '</p>
+            <p><strong>Selected Municipalities:</strong> ', if(length(selected_gemeentes) > 0) paste(selected_gemeentes, collapse = ", ") else "None selected", '</p>
+          </div>
+          <div class="warning">
+            <h2>Note</h2>
+            <p>This is a simplified report generated in the WebR environment. For full functionality, please use the desktop version of the application.</p>
+          </div>
+        </body>
+        </html>
+        ')
+        
+        writeLines(html_content, file)
+        return()
+      }
+      
+      # Original R Markdown functionality
       tempReport <- file.path(tempdir(), "gemeente_report_basic.Rmd")
       file.copy("gemeente_report_basic.Rmd", tempReport, overwrite = TRUE)
       
