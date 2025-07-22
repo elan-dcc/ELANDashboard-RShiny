@@ -10,9 +10,7 @@ This document explains the new structure of the ELAN Dashboard.
 
 ```
 Project 1/
-├── app_new.R                           # New main app file (recommended)
-├── app.R                               # Original app file
-├── server_new.R                        # New modular server file
+├── app.R                               # Original app file 
 ├── server.R                            # Original server file
 ├── ui.R                                # Updated UI file
 ├── global.R                            # Original global file
@@ -48,7 +46,7 @@ Project 1/
 ### Option 1: Use the New Modular App (Recommended)
 ```r
 # Run the new modular app
-source("app_new.R")
+source("app.R")
 ```
 
 
