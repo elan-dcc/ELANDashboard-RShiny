@@ -1,9 +1,9 @@
 # Main Dashboard UI
 # This file combines the Wijken and Gemeente tabs into the main dashboard
 
-# Source the UI components
-source("dashboard/components/wijken/ui_wijken.R")
-source("dashboard/components/gemeente/ui_gemeente.R")
+# Source the UI modules
+source("../modules/wijken/mod_ui_wijken.R")
+source("../modules/gemeente/mod_ui_gemeente.R")
 
 # Main dashboard UI function
 dashboard_ui <- function() {
