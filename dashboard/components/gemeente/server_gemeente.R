@@ -345,9 +345,46 @@ gemeente_server <- function(input, output, session, current_language = reactive(
     
     gem_paletteNum <- colorNumeric('Blues', domain = gem_var_values)
 
-    gem_stateLabels <- sprintf('<b>%s : %s</b><br/>%s : %g <br/> %s : %s',
+    # Get the appropriate variable label based on language
+    gem_var_label <- if (lang == "nl") {
+      var_def_label_NL_dict[[gem_var_to_map()]]
+    } else {
+      var_def_label_dict[[gem_var_to_map()]]
+    }
+    
+    # Use variable name as fallback if label not found
+    if (is.null(gem_var_label) || gem_var_label == "") {
+      gem_var_label <- gem_var_to_map()
+    }
+    
+    # Format the variable value with proper decimal places and comma separators
+    gem_var_values_formatted <- if (is.numeric(gem_states[[gem_var_to_map()]])) {
+      # Check if this is a cost-related variable
+      is_cost_var <- grepl("^ZVWK|KOSTEN", gem_var_to_map(), ignore.case = TRUE)
+      
+      # Check if values are large numbers (hundreds, thousands, or more)
+      max_value <- max(abs(gem_states[[gem_var_to_map()]]), na.rm = TRUE)
+      is_large_number <- max_value >= 100
+      
+      # Check if values are integers or have decimal places
+      if (all(gem_states[[gem_var_to_map()]] == as.integer(gem_states[[gem_var_to_map()]]), na.rm = TRUE)) {
+        # All values are integers
+        prettyNum(gem_states[[gem_var_to_map()]], big.mark = ",", scientific = FALSE)
+      } else if (is_cost_var || is_large_number) {
+        # Cost variables or large numbers - no decimals, just comma separators
+        prettyNum(round(gem_states[[gem_var_to_map()]]), big.mark = ",", scientific = FALSE)
+      } else {
+        # Small decimal values - format with 2 decimal places
+        prettyNum(round(gem_states[[gem_var_to_map()]], 2), big.mark = ",", scientific = FALSE, nsmall = 2)
+      }
+    } else {
+      # Non-numeric values - use as is
+      gem_states[[gem_var_to_map()]]
+    }
+    
+    gem_stateLabels <- sprintf('<b>%s : %s</b><br/>%s : %s <br/> %s : %s',
                            get_text("gemeente_label", lang), gem_states$GMN, 
-                           gem_var_to_map(), gem_states[[gem_var_to_map()]], 
+                           gem_var_label, gem_var_values_formatted, 
                            get_text("total_population_label", lang), prettyNum(gem_states$Total_Population,big.mark=",")) %>%
       lapply(function(x) HTML(x))
                    
@@ -509,14 +546,47 @@ gemeente_server <- function(input, output, session, current_language = reactive(
         return(girafe(ggobj = gem_bar))
       }
       
-      gem_bar <- gem_bar_data[!duplicated(gem_bar_data$GMN, fromLast = TRUE), ] |>
+      # Helper function for smart number formatting
+      format_chart_value <- function(values, var_name) {
+        if (is.numeric(values)) {
+          # Check if this is a cost-related variable
+          is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+          
+          # Check if values are large numbers (hundreds, thousands, or more)
+          max_value <- max(abs(values), na.rm = TRUE)
+          is_large_number <- max_value >= 100
+          
+          # Check if values are integers or have decimal places
+          if (all(values == as.integer(values), na.rm = TRUE)) {
+            # All values are integers
+            prettyNum(values, big.mark = ",", scientific = FALSE)
+          } else if (is_cost_var || is_large_number) {
+            # Cost variables or large numbers - no decimals, just comma separators
+            prettyNum(round(values), big.mark = ",", scientific = FALSE)
+          } else {
+            # Small decimal values - format with 2 decimal places
+            prettyNum(round(values, 2), big.mark = ",", scientific = FALSE, nsmall = 2)
+          }
+        } else {
+          # Non-numeric values - use as is
+          values
+        }
+      }
+      
+      # Prepare data for bar chart
+      gem_bar_data_clean <- gem_bar_data[!duplicated(gem_bar_data$GMN, fromLast = TRUE), ]
+      
+      # Format values for tooltip
+      formatted_gem_values <- format_chart_value(gem_bar_data_clean[[gem_var_to_map()]], gem_var_to_map())
+      
+      gem_bar <- gem_bar_data_clean |>
         ggplot() +
         geom_col_interactive(aes(
           x = reorder(GMN, eval(parse(text=gem_var_to_map()))),
           y = eval(parse(text=gem_var_to_map())),
           fill = reorder(GMN, eval(parse(text=gem_var_to_map()))),
           data_id = GMN,
-          tooltip = c(paste0(get_text("gemeente_label", current_language()), ": ", GMN, "\n ", get_text("value_label", current_language()), ": ", eval(parse(text=gem_var_to_map())) )),
+          tooltip = c(paste0(get_text("gemeente_label", current_language()), ": ", GMN, "\n ", get_text("value_label", current_language()), ": ", formatted_gem_values)),
         )) +
         geom_text_interactive(aes(
           x = reorder(GMN, eval(parse(text=gem_var_to_map()))),
@@ -556,7 +626,40 @@ gemeente_server <- function(input, output, session, current_language = reactive(
       return(girafe(ggobj = line))
     }
     
-    line <- gem_states[!is.na(gem_states[[gem_var_to_map()]]), ][!duplicated(gem_states[c('GMN','YEAR')], fromLast = TRUE), ] |>
+    # Helper function for smart number formatting
+    format_chart_value <- function(values, var_name) {
+      if (is.numeric(values)) {
+        # Check if this is a cost-related variable
+        is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+        
+        # Check if values are large numbers (hundreds, thousands, or more)
+        max_value <- max(abs(values), na.rm = TRUE)
+        is_large_number <- max_value >= 100
+        
+        # Check if values are integers or have decimal places
+        if (all(values == as.integer(values), na.rm = TRUE)) {
+          # All values are integers
+          prettyNum(values, big.mark = ",", scientific = FALSE)
+        } else if (is_cost_var || is_large_number) {
+          # Cost variables or large numbers - no decimals, just comma separators
+          prettyNum(round(values), big.mark = ",", scientific = FALSE)
+        } else {
+          # Small decimal values - format with 2 decimal places
+          prettyNum(round(values, 2), big.mark = ",", scientific = FALSE, nsmall = 2)
+        }
+      } else {
+        # Non-numeric values - use as is
+        values
+      }
+    }
+    
+    # Prepare data for line chart
+    gem_line_data <- gem_states[!is.na(gem_states[[gem_var_to_map()]]), ][!duplicated(gem_states[c('GMN','YEAR')], fromLast = TRUE), ]
+    
+    # Format values for tooltip
+    formatted_gem_line_values <- format_chart_value(gem_line_data[[gem_var_to_map()]], gem_var_to_map())
+    
+    line <- gem_line_data |>
       ggplot(aes(
         x = YEAR,
         y = eval(parse(text=gem_var_to_map())),
@@ -567,7 +670,7 @@ gemeente_server <- function(input, output, session, current_language = reactive(
       scale_y_continuous(n.breaks = 8) +
       scale_color_manual(values = gmn_color_dict) +
       geom_line_interactive(linewidth = 0.5) +
-      geom_point_interactive(aes(tooltip = c(paste0(get_text("gemeente_label", current_language()), ": ", GMN, "\n ", get_text("year_label", current_language()), ": ", YEAR, "\n ", get_text("value_label", current_language()), ": ", eval(parse(text=gem_var_to_map())) )) ), size = 1.5) +
+      geom_point_interactive(aes(tooltip = c(paste0(get_text("gemeente_label", current_language()), ": ", GMN, "\n ", get_text("year_label", current_language()), ": ", YEAR, "\n ", get_text("value_label", current_language()), ": ", formatted_gem_line_values))), size = 1.5) +
       labs(x = get_text("year_label", current_language()), y = get_text("value_label", current_language())) +
       line_chart_theme() +
       theme(legend.position = 'none',

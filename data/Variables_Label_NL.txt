@@ -1,5 +1,5 @@
 Total_Population:Totale bevolking
-Total_ICPCPat_Pop:Totaal ELAN-geregistreerde personen
+Total_ICPCPat_Pop:Aandeel ELAN-geregistreerde personen
 Gender_Mannen:Gender Mannen
 Gender_Vrouwen:Gender Vrouwen
 Age0to20:Leeftijd 0to20

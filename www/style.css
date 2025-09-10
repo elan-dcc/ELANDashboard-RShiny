@@ -9,6 +9,56 @@
   height: 120px !important;
   min-height: 120px !important;
   margin-bottom: 20px !important;
+  transform: scaleX(-1) !important;
+}
+
+/* Invert the navbar content back to normal orientation */
+.navbar > * {
+  transform: scaleX(-1) !important;
+}
+
+/* ELAN Logo styling - make background transparent and control size */
+.navbar img[src*="ELAN logo kort wit.png"],
+.navbar-logo {
+  background: transparent !important;
+  mix-blend-mode: screen !important;
+  filter: contrast(1.5) brightness(1.3) drop-shadow(0 0 0 transparent) !important;
+  height: 75px !important;
+  width: auto !important;
+  max-height: 75px !important;
+  margin-left: 25px !important;
+  position: relative !important;
+  left: -10px !important;
+  top: -30px !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Ensure navbar title container doesn't constrain logo size */
+.navbar-brand,
+.navbar .navbar-brand {
+  height: auto !important;
+  padding: 0 !important;
+  line-height: normal !important;
+  margin-left: 25px !important;
+  position: relative !important;
+  left: -10px !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.navbar-brand img {
+  height: 75px !important;
+  width: auto !important;
+  max-height: 75px !important;
+}
+
+/* Footer logo styling - simple and reliable */
+.footer-logo img[src*="ELAN logo kort wit.png"],
+.footer-logo-img {
+  height: 75px !important;
+  width: auto !important;
+  display: block !important;
 }
 
 /* Override any default navbar styling */
@@ -35,15 +85,18 @@
 }
 
 .navbar-nav {
-  justify-content: right !important;
-  margin: 0 auto !important;
+  justify-content: left !important;
+  margin: 0 !important;
+  padding-left: 100px !important;
   padding-right: 30px !important;
+  position: relative !important;
+  top: -20px !important;
 }
 
 .navbar .navbar-nav {
   float: none !important;
-  text-align: right !important;
-  margin-left: auto !important;
+  text-align: left !important;
+  margin-left: 0 !important;
   margin-right: auto !important;
 }
 
@@ -104,7 +157,128 @@ body {
 }
 
 /* Responsive breakpoints */
-@media (min-width: 1200px) and (max-width: 1600px) {
+@media (min-width: 2000px) {
+  .navbar-brand img {
+    height: 140px !important;
+    margin-top: 60px !important;
+    margin-left: 400px !important;
+  }
+  
+  .navbar-nav {
+    padding-right: 250px !important;
+  }
+  
+  .footer {
+    height: 800px !important;
+    min-height: 800px !important;
+    padding: 40px 100px 40px 100px !important;
+  }
+  
+  .footer-row-1 {
+    margin-top: 200px !important;
+    margin-bottom: 80px !important;
+  }
+  
+  .footer-logo img {
+    height: 170px !important;
+  }
+  
+  .main-sponsor-logo {
+    min-width: 400px !important;
+    height: 200px !important;
+  }
+  
+  .main-sponsor-logo img {
+    width: 300px !important;
+    height: 140px !important;
+  }
+  
+  .footer-row-2 {
+    height: 220px !important;
+    min-height: 220px !important;
+    padding-top: 40px !important;
+  }
+  
+  .partner-logo {
+    min-width: 200px !important;
+    height: 160px !important;
+    padding: 35px !important;
+  }
+  
+  .partner-logo img {
+    width: 250px !important;
+    height: 125px !important;
+  }
+  
+  .footer-address {
+    font-size: 18px !important;
+  }
+  
+  .footer-links a {
+    font-size: 18px !important;
+  }
+  
+  .main-sponsors-title p,
+  .partners-title p {
+    font-size: 20px !important;
+  }
+}
+
+@media (min-width: 1600px) and (max-width: 1999px) {
+  .navbar-brand img {
+    height: 120px !important;
+    margin-top: 50px !important;
+    margin-left: 300px !important;
+  }
+  
+  .navbar-nav {
+    padding-right: 200px !important;
+  }
+  
+  .footer {
+    height: 700px !important;
+    min-height: 700px !important;
+    padding: 30px 80px 30px 80px !important;
+  }
+  
+  .footer-row-1 {
+    margin-top: 180px !important;
+    margin-bottom: 60px !important;
+  }
+  
+  .footer-logo img {
+    height: 150px !important;
+  }
+  
+  .main-sponsor-logo {
+    min-width: 350px !important;
+    height: 180px !important;
+  }
+  
+  .main-sponsor-logo img {
+    width: 250px !important;
+    height: 120px !important;
+  }
+  
+  .footer-row-2 {
+    height: 200px !important;
+    min-height: 200px !important;
+    padding-top: 30px !important;
+  }
+  
+  .partner-logo {
+    min-width: 180px !important;
+    height: 140px !important;
+    padding: 30px !important;
+  }
+  
+  .partner-logo img {
+    width: 220px !important;
+    height: 110px !important;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1599px) {
   .navbar-brand img {
     height: 100px !important;
     margin-top: 40px !important;
@@ -357,6 +531,77 @@ label {
   position: relative !important;
 }
 
+/* Enhanced background scaling for different screen sizes */
+@media (min-width: 1600px) {
+  .footer {
+    background-size: 100% 100% !important;
+  }
+}
+
+@media (min-width: 2000px) {
+  .footer {
+    background-size: 100% 100% !important;
+  }
+}
+
+/* Ultra-wide screen support (2560px+) */
+@media (min-width: 2560px) {
+  .footer {
+    height: 900px !important;
+    min-height: 900px !important;
+    padding: 50px 150px 50px 150px !important;
+  }
+  
+  .footer-row-1 {
+    margin-top: 250px !important;
+    margin-bottom: 100px !important;
+  }
+  
+  .footer-logo img {
+    height: 200px !important;
+  }
+  
+  .main-sponsor-logo {
+    min-width: 450px !important;
+    height: 220px !important;
+  }
+  
+  .main-sponsor-logo img {
+    width: 350px !important;
+    height: 160px !important;
+  }
+  
+  .footer-row-2 {
+    height: 250px !important;
+    min-height: 250px !important;
+    padding-top: 50px !important;
+  }
+  
+  .partner-logo {
+    min-width: 220px !important;
+    height: 180px !important;
+    padding: 40px !important;
+  }
+  
+  .partner-logo img {
+    width: 280px !important;
+    height: 140px !important;
+  }
+  
+  .footer-address {
+    font-size: 20px !important;
+  }
+  
+  .footer-links a {
+    font-size: 20px !important;
+  }
+  
+  .main-sponsors-title p,
+  .partners-title p {
+    font-size: 22px !important;
+  }
+}
+
 /* First row: three columns layout */
 .footer-row-1 {
   display: flex !important;
@@ -387,8 +632,9 @@ label {
 }
 
 .footer-logo img {
-  height: 130px !important;
+  height: 75px !important;
   width: auto !important;
+  display: block !important;
 }
 
 .footer-address {
@@ -519,17 +765,22 @@ label {
 .footer-row-2 {
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   align-items: center !important;
   width: 100% !important;
-  overflow: hidden !important;
-  height: 150px !important;
-  min-height: 150px !important;
+  overflow: visible !important;
+  height: 180px !important;
+  min-height: 180px !important;
+  padding-top: 20px !important;
 }
 
 .partners-title {
   text-align: center !important;
   margin-bottom: 20px !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  height: auto !important;
+  min-height: auto !important;
 }
 
 .partners-title p {
@@ -539,7 +790,10 @@ label {
   font-weight: 600 !important;
   text-shadow: none !important;
   margin: 0 !important;
-  padding: 0 !important;
+  padding: 10px 0 !important;
+  line-height: 1.4 !important;
+  height: auto !important;
+  min-height: auto !important;
 }
 
 .partners-logos {

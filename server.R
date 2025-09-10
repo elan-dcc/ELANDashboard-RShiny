@@ -6,16 +6,26 @@ library(leaflet)  # renderLeaflet function
 library(dplyr)
 library(bslib)
 library(bsicons)
-
+# library(geojsonio)  # Removed - not needed, using sf::st_write for GeoJSON
 library(sf)
 library(magrittr)
-# library(geojsonio)  # Removed - not needed, using sf::st_write for GeoJSON
 library(htmltools)
 library(htmlwidgets)
 # library(stringi)  # Removed - not used and may cause WebR compatibility issues
 library(RColorBrewer)
 # library(reactlog)  # Removed - not used and may cause WebR compatibility issues
 library(ggplot2)
+
+# Explicitly load dependencies that might be missing for shinylive
+library(munsell)  # Required by ggiraph
+library(scales)   # Used in Rmd files and ggplot2
+library(viridisLite)  # Color scales dependency
+library(farver)   # Color handling dependency
+library(labeling) # ggplot2 dependency
+library(isoband)  # ggplot2 dependency
+library(gtable)   # ggplot2 dependency
+library(grid)     # ggplot2 dependency
+
 library(ggiraph)
 library(tidyverse)
 library(foreach)

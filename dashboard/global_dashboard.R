@@ -5,46 +5,15 @@
 library(ggplot2)
 library(tibble)
 library(dplyr)
-library(readxl)
 library(sf)
 
-# Helper function to optimize shapefile size
-optimize_shapefile <- function(shapefile_path, tolerance = 100, precision = 6) {
-  # Read shapefile
-  sf_obj <- st_read(shapefile_path)
-  
-  # 1. Simplify geometry
-  sf_obj <- st_simplify(sf_obj, dTolerance = tolerance)
-  
-  # 2. Reduce coordinate precision
-  sf_obj <- st_set_precision(sf_obj, precision)
-  
-  # 3. Remove unnecessary columns (keep only essential ones)
-  # This will be done in the main code where we know which columns are needed
-  
-  # 4. Convert to appropriate CRS for web mapping
-  if(st_crs(sf_obj)$epsg != 4326) {
-    sf_obj <- st_transform(sf_obj, crs = 4326)
-  }
-  
-  return(sf_obj)
-}
+# Load readxl with error handling for shinylive compatibility
+tryCatch({
+  library(readxl)
+}, error = function(e) {
+  warning("readxl could not be loaded: ", e$message)
+})
 
-# Function to convert shapefile to optimized GeoJSON
-convert_to_geojson <- function(shapefile_path, output_path = NULL, tolerance = 100) {
-  # Read and optimize shapefile
-  sf_obj <- optimize_shapefile(shapefile_path, tolerance = tolerance)
-  
-  # Convert to GeoJSON
-  if(is.null(output_path)) {
-    output_path <- gsub("\\.shp$", "_optimized.geojson", shapefile_path)
-  }
-  
-  # Write optimized GeoJSON
-  st_write(sf_obj, output_path, driver = "GeoJSON", delete_dsn = TRUE)
-  
-  return(sf_obj)
-}
 
 # Function to fix problematic column names
 fix_column_names <- function(df) {
@@ -117,6 +86,7 @@ area_dict <- list("s-gravenhage"="s-Gravenhage",
                   'Leiden'='Leiden',
                   "Lisse"="Lisse",
                   'Leidschendam-Voorburg'='Leidschendam-Voorburg',
+                  'Rijswijk'='Rijswijk',
                   'Wassenaar'='Wassenaar',
                   'Zoetermeer'='Zoetermeer',
                   "s-gravenhage en omstreken"="s-gravenhage en omstreken",
@@ -148,10 +118,10 @@ geo_df_gem <- geo_df_gem %>%
   filter(GMN %in% values_all_regions)
 
 # Read CSV files for gemeenten
-df_numeric_gem <- read.csv(paste0(path, 'df_numeric_gem_ver_6.csv'), sep = ',', encoding = 'latin1') %>%
+df_numeric_gem <- read.csv(paste0(path, 'df_numeric_gem_ver_7.csv'), sep = ',', encoding = 'latin1') %>%
   rename(GMN = gem_name)
 
-df_count_gem <- read.csv(paste0(path, 'df_count_gem_ver_6.csv'), sep = ',', encoding = 'latin1') %>%
+df_count_gem <- read.csv(paste0(path, 'df_count_gem_ver_7.csv'), sep = ',', encoding = 'latin1') %>%
   rename(Total_Population = Total_All_Pop)
 
 # Fix problematic column names in gemeente data
@@ -175,12 +145,12 @@ columns_gem <- setdiff(headers_gem, c('GMC', 'GMN', 'YEAR'))
 orig_columns_gem <- columns_gem
 
 df_gem[columns_gem] <- round(df_gem[columns_gem], 4)
-
-df_gem <- df_gem %>%
-  mutate(Total_GP_Pop = Total_ICPCPat_Pop *100/ Total_Population)
-
-df_gem <- df_gem %>%
-  mutate(Total_GP_Pop = round(Total_GP_Pop, 2))
+# 
+# df_gem <- df_gem %>%
+#   mutate(Total_GP_Pop = Total_ICPCPat_Pop *100/ Total_Population)
+# 
+# df_gem <- df_gem %>%
+#   mutate(Total_GP_Pop = round(Total_GP_Pop, 2))
 
 df_gem$YEAR <- as.integer(df_gem$YEAR)
 
@@ -198,20 +168,23 @@ df_gem[columns] <- round(df_gem[columns], 4)
 # Column names are now fixed by the fix_column_names function
 
 # Read shapefile for wijken
-geo_df <- st_read(file.path(path, 'wijk_2023_v0.geojson'))
+geo_df <- st_read(file.path(path, 'wijken_simplified_2024.gpkg'))
 geo_df <- st_simplify(geo_df, dTolerance = 50)
 geo_df <- st_transform(geo_df, crs = 4326)
-geo_df <- geo_df %>% rename(WKC = WK_CODE)
-geo_df$GM_NAAM <- gsub("'", '', geo_df$GM_NAAM)
+geo_df <- geo_df %>% rename(WKC = wijkcode)
+geo_df$GM_NAAM <- gsub("'", '', geo_df$gemeentenaam)
+# Fix municipality name changes in the new file
+geo_df$GM_NAAM <- gsub("Rijswijk \\(ZH\\.\\)", "Rijswijk", geo_df$GM_NAAM)
+geo_df$GM_NAAM <- gsub("'s-Gravenhage", "s-Gravenhage", geo_df$GM_NAAM)
 geo_df <- geo_df %>% filter(GM_NAAM %in% values_all_regions)
 
 # Read and merge numeric data for wijken
-df_numeric <- read.csv(file.path(path, 'df_numeric_ver_6.csv'), sep = ',', encoding = 'latin1')
+df_numeric <- read.csv(file.path(path, 'df_numeric_ver_7.csv'), sep = ',', encoding = 'latin1')
 df_numeric <- df_numeric %>% rename(GMN = gem_name)
 df_numeric$WKN[(df_numeric$WKN == 'Buitengebied') & (df_numeric$GMN == 'Lisse') ] <- 'Buitengebied Lisse'
 df_numeric$WKN[(df_numeric$WKN == 'Buitengebied') & (df_numeric$GMN == 'Hillegom') ] <- 'Buitengebied Hillegom'
 
-df_count <- read.csv(file.path(path, 'df_count_ver_6.csv'), sep = ',', encoding = 'latin1')
+df_count <- read.csv(file.path(path, 'df_count_ver_7.csv'), sep = ',', encoding = 'latin1')
 
 # Fix problematic column names in wijken data
 df_count <- fix_column_names(df_count)
@@ -221,6 +194,7 @@ df_numeric <- fix_column_names(df_numeric)
 colnames(df_count) <- gsub("^X\\._", "", colnames(df_count))
 
 df_count <- df_count %>% rename(Total_Population = Total_All_Pop)
+
 df <- merge(df_count, df_numeric, by = c('WKC', 'WKN', 'GMN', 'YEAR'))
 df$YEAR <- as.integer(df$YEAR)
 
@@ -385,7 +359,7 @@ create_var_dict <- function(var_list, label_dict, category_name) {
 }
 
 # Variable dictionary with English labels - ACTIVE VARIABLES ONLY
-var_dict_en <- list('Default' = list('Total Population' = "Total_Population", 'Total ICPC Patients Population' = 'Total_ICPCPat_Pop'))
+var_dict_en <- list('Default' = list('Total Population' = "Total_Population", 'Percentage ICPC Patients Population' = 'Total_ICPCPat_Pop'))
 
 # Add categories safely
 person_dict <- create_var_dict(Person_var, var_def_label_dict, 'Person')
@@ -407,7 +381,7 @@ other_dict <- create_var_dict(Ander_var, var_def_label_dict, 'Other')
 if(!is.null(other_dict)) var_dict_en <- c(var_dict_en, other_dict)
 
 # Variable dictionary with Dutch labels - ACTIVE VARIABLES ONLY
-var_dict_nl <- list('Standaard' = list('Totale bevolking' = "Total_Population", 'Totaal ELAN-geregistreerde personen' = 'Total_ICPCPat_Pop'))
+var_dict_nl <- list('Standaard' = list('Totale bevolking' = "Total_Population", 'Aandeel ELAN-geregistreerde personen' = 'Total_ICPCPat_Pop'))
 
 # Add categories safely
 person_dict_nl <- create_var_dict(Person_var, var_def_label_NL_dict, 'Persoon')
@@ -478,8 +452,15 @@ Code_dict_gmn_to_gm_code = setNames((states_gmc[states_gmc$YEAR == "2021",]$GM_C
 Code_dict_gmc_to_gmn = setNames((states_gmc[states_gmc$YEAR == "2021",]$GMN), (states_gmc[states_gmc$YEAR == "2021",]$GMC))
 
 # Read Excel files for Data Sources page
-df_h <- read_excel(paste0(path, 'Codebook_shorter.xlsx'), sheet = 'Huisartsen')
-df_cbs <- read_excel(paste0(path, 'Codebook_shorter.xlsx'), sheet = 'CBS')
+tryCatch({
+  df_h <- read_excel(paste0(path, 'Codebook_shorter.xlsx'), sheet = 'Huisartsen')
+  df_cbs <- read_excel(paste0(path, 'Codebook_shorter.xlsx'), sheet = 'CBS')
+}, error = function(e) {
+  warning("Could not read Excel files: ", e$message)
+  # Create empty data frames as fallback
+  df_h <- data.frame()
+  df_cbs <- data.frame()
+})
 
 # Create Variables Definition data
 var_def_label_NL_df <- data.frame(

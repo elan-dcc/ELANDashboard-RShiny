@@ -302,10 +302,47 @@ wijken_server <- function(input, output, session, current_language = reactive("e
     
     paletteNum <- colorNumeric('Blues', domain = var_values)
     
-    stateLabels <- sprintf('<b>%s : %s</b><br/> %s : %s <br/>%s : %g <br/> %s : %s',
+    # Get the appropriate variable label based on language
+    var_label <- if (lang == "nl") {
+      var_def_label_NL_dict[[var_to_map()]]
+    } else {
+      var_def_label_dict[[var_to_map()]]
+    }
+    
+    # Use variable name as fallback if label not found
+    if (is.null(var_label) || var_label == "") {
+      var_label <- var_to_map()
+    }
+    
+    # Format the variable value with proper decimal places and comma separators
+    var_values_formatted <- if (is.numeric(states[[var_to_map()]])) {
+      # Check if this is a cost-related variable
+      is_cost_var <- grepl("^ZVWK|KOSTEN", var_to_map(), ignore.case = TRUE)
+      
+      # Check if values are large numbers (hundreds, thousands, or more)
+      max_value <- max(abs(states[[var_to_map()]]), na.rm = TRUE)
+      is_large_number <- max_value >= 100
+      
+      # Check if values are integers or have decimal places
+      if (all(states[[var_to_map()]] == as.integer(states[[var_to_map()]]), na.rm = TRUE)) {
+        # All values are integers
+        prettyNum(states[[var_to_map()]], big.mark = ",", scientific = FALSE)
+      } else if (is_cost_var || is_large_number) {
+        # Cost variables or large numbers - no decimals, just comma separators
+        prettyNum(round(states[[var_to_map()]]), big.mark = ",", scientific = FALSE)
+      } else {
+        # Small decimal values - format with 2 decimal places
+        prettyNum(round(states[[var_to_map()]], 2), big.mark = ",", scientific = FALSE, nsmall = 2)
+      }
+    } else {
+      # Non-numeric values - use as is
+      states[[var_to_map()]]
+    }
+    
+    stateLabels <- sprintf('<b>%s : %s</b><br/> %s : %s <br/>%s : %s <br/> %s : %s',
                            get_text("gemeente_label", lang), states$GMN, 
                            get_text("wijk_label", lang), states$WKN, 
-                           var_to_map(), states[[var_to_map()]], 
+                           var_label, var_values_formatted, 
                            get_text("total_population_label", lang), prettyNum(states$Total_Population,big.mark=",")) %>%
       lapply(function(x) HTML(x))
     
@@ -475,6 +512,36 @@ wijken_server <- function(input, output, session, current_language = reactive("e
         return(girafe(ggobj = bar))
       }
       
+      # Helper function for smart number formatting
+      format_chart_value <- function(values, var_name) {
+        if (is.numeric(values)) {
+          # Check if this is a cost-related variable
+          is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+          
+          # Check if values are large numbers (hundreds, thousands, or more)
+          max_value <- max(abs(values), na.rm = TRUE)
+          is_large_number <- max_value >= 100
+          
+          # Check if values are integers or have decimal places
+          if (all(values == as.integer(values), na.rm = TRUE)) {
+            # All values are integers
+            prettyNum(values, big.mark = ",", scientific = FALSE)
+          } else if (is_cost_var || is_large_number) {
+            # Cost variables or large numbers - no decimals, just comma separators
+            prettyNum(round(values), big.mark = ",", scientific = FALSE)
+          } else {
+            # Small decimal values - format with 2 decimal places
+            prettyNum(round(values, 2), big.mark = ",", scientific = FALSE, nsmall = 2)
+          }
+        } else {
+          # Non-numeric values - use as is
+          values
+        }
+      }
+      
+      # Format values for tooltip
+      formatted_values <- format_chart_value(bar_data[[var_to_map()]], var_to_map())
+      
       bar <- bar_data |>
         ggplot() +
         geom_col_interactive(aes(
@@ -482,7 +549,7 @@ wijken_server <- function(input, output, session, current_language = reactive("e
           y = eval(parse(text=var_to_map())), 
           fill = reorder(WKN, eval(parse(text=var_to_map()))),
           data_id = WKN,
-          tooltip = c(paste0(get_text("wijk_label", current_language()), ": ", WKN, "\n ", get_text("value_label", current_language()), ": ", eval(parse(text=var_to_map())) )),
+          tooltip = c(paste0(get_text("wijk_label", current_language()), ": ", WKN, "\n ", get_text("value_label", current_language()), ": ", formatted_values)),
         )) + 
         geom_text_interactive(aes(
           x = reorder(WKN, eval(parse(text=var_to_map()))),
@@ -495,7 +562,7 @@ wijken_server <- function(input, output, session, current_language = reactive("e
         theme(axis.text.y=element_blank(),
               axis.text.x = element_text(angle = 90, hjust = 1), 
               legend.position="none")+
-        scale_fill_manual_interactive(values = grDevices::colorRampPalette(c("#f2fff6", "#3C50BF"))(169) )
+        scale_fill_manual_interactive(values = grDevices::colorRampPalette(c("#f2fff6", "#3C50BF"))(length(unique(bar_data$WKN))) )
       
       girafe(ggobj = bar, options = list(opts_selection(type = "multiple", css = "fill:yellow;stroke:white;r:5pt;"),
                                          opts_hover(css = "fill:wheat;stroke:white;r:5pt;") ), height_svg = height_adj * 3, width_svg = 8)
@@ -520,7 +587,40 @@ wijken_server <- function(input, output, session, current_language = reactive("e
       return(girafe(ggobj = line))
     }
     
-    line <- states[!is.na(states[[var_to_map()]]), ][!duplicated(states[c('WKN','YEAR')], fromLast = TRUE), ] |>
+    # Helper function for smart number formatting
+    format_chart_value <- function(values, var_name) {
+      if (is.numeric(values)) {
+        # Check if this is a cost-related variable
+        is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+        
+        # Check if values are large numbers (hundreds, thousands, or more)
+        max_value <- max(abs(values), na.rm = TRUE)
+        is_large_number <- max_value >= 100
+        
+        # Check if values are integers or have decimal places
+        if (all(values == as.integer(values), na.rm = TRUE)) {
+          # All values are integers
+          prettyNum(values, big.mark = ",", scientific = FALSE)
+        } else if (is_cost_var || is_large_number) {
+          # Cost variables or large numbers - no decimals, just comma separators
+          prettyNum(round(values), big.mark = ",", scientific = FALSE)
+        } else {
+          # Small decimal values - format with 2 decimal places
+          prettyNum(round(values, 2), big.mark = ",", scientific = FALSE, nsmall = 2)
+        }
+      } else {
+        # Non-numeric values - use as is
+        values
+      }
+    }
+    
+    # Prepare data for line chart
+    line_data <- states[!is.na(states[[var_to_map()]]), ][!duplicated(states[c('WKN','YEAR')], fromLast = TRUE), ]
+    
+    # Format values for tooltip
+    formatted_line_values <- format_chart_value(line_data[[var_to_map()]], var_to_map())
+    
+    line <- line_data |>
       ggplot(aes(
         x = YEAR,
         y = eval(parse(text=var_to_map())),
@@ -531,7 +631,7 @@ wijken_server <- function(input, output, session, current_language = reactive("e
       scale_y_continuous(n.breaks = 8) +
       scale_color_manual(values = gmn_color_dict) +
       geom_line_interactive(linewidth = 0.5) +
-      geom_point_interactive(aes(tooltip = c(paste0(get_text("wijk_label", current_language()), ": ", WKN, "\n ", get_text("year_label", current_language()), ": ", YEAR, "\n ", get_text("value_label", current_language()), ": ", eval(parse(text=var_to_map())) )) ), size = 1.5) +
+      geom_point_interactive(aes(tooltip = c(paste0(get_text("wijk_label", current_language()), ": ", WKN, "\n ", get_text("year_label", current_language()), ": ", YEAR, "\n ", get_text("value_label", current_language()), ": ", formatted_line_values))), size = 1.5) +
       labs(x = get_text("year_label", current_language()), y = get_text("value_label", current_language())) + 
       line_chart_theme() +
       theme(legend.position = 'none',

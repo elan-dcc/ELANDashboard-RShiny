@@ -62,7 +62,7 @@ english_text <- list(
   "data_dictionary_panel" = "Data Dictionary",
   "change_log_panel" = "Change Log",
   "about_us_panel" = "About Us",
-  "last_updated" = "Last Updated August 2025",
+  "last_updated" = "Last updated", # Dynamic date will be added by get_text function
   "copyright" = "© ELAN DCC. All rights reserved.",
   "partners_title" = "The Health Campus The Hague is an initiative of",
   
@@ -149,7 +149,7 @@ dutch_text <- list(
   "data_dictionary_panel" = "Gegevenswoordenboek",
   "change_log_panel" = "Wijzigingslog",
   "about_us_panel" = "Over Ons",
-  "last_updated" = "Laatst bijgewerkt Augustus 2025",
+  "last_updated" = "Laatst bijgewerkt", # Dynamic date will be added by get_text function
   "copyright" = "© ELAN DCC. Alle rechten voorbehouden.",
   "partners_title" = "De Health Campus Den Haag is een initiatief van",
   
@@ -175,11 +175,66 @@ dutch_text <- list(
   "hadoks_area" = "Hadoks' gebied"
 )
 
+# Function to extract latest date from changelog
+get_latest_changelog_date <- function() {
+  # Read the changelog file
+  changelog_file <- "ui_panels/change_log_panel.R"
+  
+  if (!file.exists(changelog_file)) {
+    return("Augustus 2025") # fallback
+  }
+  
+  # Read file content
+  content <- readLines(changelog_file, warn = FALSE)
+  
+  # Look for version headings with dates (format: Version X - DD/MM/YYYY)
+  version_pattern <- 'h2\\("Version [^"]* - (\\d{2}/\\d{2}/\\d{4})"'
+  matches <- grep(version_pattern, content, value = TRUE)
+  
+  if (length(matches) == 0) {
+    return("Augustus 2025") # fallback
+  }
+  
+  # Extract the first (latest) date
+  date_match <- regmatches(matches[1], regexec(version_pattern, matches[1]))
+  if (length(date_match) > 0 && length(date_match[[1]]) > 1) {
+    date_str <- date_match[[1]][2]
+    
+    # Convert DD/MM/YYYY to month name and year
+    date_parts <- strsplit(date_str, "/")[[1]]
+    if (length(date_parts) == 3) {
+      month <- as.numeric(date_parts[2])
+      year <- as.numeric(date_parts[3])
+      
+      # Convert month number to Dutch month name
+      month_names <- c("Januari", "Februari", "Maart", "April", "Mei", "Juni",
+                      "Juli", "Augustus", "September", "Oktober", "November", "December")
+      
+      if (month >= 1 && month <= 12) {
+        return(paste(month_names[month], year))
+      }
+    }
+  }
+  
+  return("Augustus 2025") # fallback
+}
+
 # Function to get text based on current language
 get_text <- function(key, language = "en") {
   # Handle NULL or empty language parameter
   if (is.null(language) || length(language) == 0) {
     language <- "en"
+  }
+  
+  # Special handling for last_updated to use dynamic date
+  if (key == "last_updated") {
+    if (language == "nl") {
+      latest_date <- get_latest_changelog_date()
+      return(paste("Laatst bijgewerkt", latest_date))
+    } else {
+      latest_date <- get_latest_changelog_date()
+      return(paste("Last updated", latest_date))
+    }
   }
   
   if (language == "nl") {

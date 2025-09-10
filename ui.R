@@ -6,15 +6,25 @@ library(leaflet)  # renderLeaflet function
 library(dplyr)
 library(bslib)
 library(bsicons)
-
+# library(geojsonio)  # Removed - not needed, using sf::st_write for GeoJSON
 library(sf)
 library(magrittr)
-# library(geojsonio)  # Removed - not needed, using sf::st_write for GeoJSON
 library(htmltools)
 library(htmlwidgets)
 # library(stringi)  # Removed - not used and may cause WebR compatibility issues
 library(RColorBrewer)
 # library(shinyBS)  # Removed - not used and may cause WebR compatibility issues
+
+# Explicitly load dependencies that might be missing for shinylive
+library(munsell)  # Required by ggiraph
+library(scales)   # Used in Rmd files and ggplot2
+library(viridisLite)  # Color scales dependency
+library(farver)   # Color handling dependency
+library(labeling) # ggplot2 dependency
+library(isoband)  # ggplot2 dependency
+library(gtable)   # ggplot2 dependency
+library(grid)     # ggplot2 dependency
+
 library(ggiraph)
 library(shinyjs)
 
@@ -47,7 +57,9 @@ ui <- page_fluid(
   page_navbar(
   title = div(
     tags$a(href = "https://healthcampusdenhaag.nl/nl/", target = "_blank",
-      img(src="img/hc-dh-logo.svg")
+      img(src="img/ELAN logo kort wit.png", 
+          style="height: 75px; background: transparent; mix-blend-mode: screen; filter: contrast(1.5) brightness(1.3) drop-shadow(0 0 0 transparent); position: relative; top: -30px;",
+          class="navbar-logo")
     ),
   ),
   window_title = "ELAN Dashboard",
@@ -104,7 +116,9 @@ div(
       div(
         class = "footer-logo",
         tags$a(href = "https://healthcampusdenhaag.nl/nl/", target = "_blank",
-          img(src="img/hc-dh-logo.svg")
+          img(src="img/ELAN logo kort wit.png", 
+              style="height: 75px;",
+              class="footer-logo-img")
         )
       ),
       div(
