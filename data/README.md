@@ -6,17 +6,17 @@ This directory contains all the data files required for the ELAN Dashboard.
 
 ### Core Data Files (Required by Dashboard)
 - **CSV Files:**
-  - `df_numeric_gem_ver_6.csv` - Gemeente numeric data
-  - `df_count_gem_ver_6.csv` - Gemeente count data
-  - `df_numeric_ver_6.csv` - Wijken numeric data
-  - `df_count_ver_6.csv` - Wijken count data
+  - `df_numeric_gem_ver_7.csv` - Gemeente numeric data
+  - `df_count_gem_ver_7.csv` - Gemeente count data
+  - `df_numeric_ver_7.csv` - Wijken numeric data
+  - `df_count_ver_7.csv` - Wijken count data
 
 - **Excel Files:**
   - `Codebook_shorter.xlsx` - Data dictionary and codebook
 
 - **Shapefiles:**
   - `gemeenten_2023_v1.shp` - Gemeente boundaries (with .shx, .dbf, .prj, .cpg)
-  - `wijk_2023_v0.shp` - Wijken boundaries (with .shx, .dbf, .prj)
+  - `wijken_simplified_2024.gpkg` - Wijken boundaries
 
 - **Variable Definition Files:**
   - `Variables_Definition.txt` - Variable definitions (English)
@@ -27,7 +27,6 @@ This directory contains all the data files required for the ELAN Dashboard.
   - `Variables_Label_NL.txt` - Variable labels (Dutch)
 
 ### Additional Files (Not used by current dashboard)
-- Various version files (ver_3, ver_5)
 - Additional Excel files with care data
 - JSON and GeoJSON files
 - Clustered data files
@@ -46,5 +45,5 @@ The dashboard automatically loads these files from the `data/` directory. The pa
 ## Notes
 
 - All files are encoded in UTF-8 or Latin1 as appropriate
-- Shapefiles include all necessary components (.shp, .shx, .dbf, .prj, .cpg)
-- The dashboard uses version 6 of the data files 
+- Shapefiles include all necessary components (.shp, .shx, .dbf, .prj, .cpg, .gpkg)
+- The dashboard uses version 7 of the data files 
