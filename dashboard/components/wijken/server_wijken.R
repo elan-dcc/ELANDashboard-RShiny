@@ -316,8 +316,8 @@ wijken_server <- function(input, output, session, current_language = reactive("e
     
     # Format the variable value with proper decimal places and comma separators
     var_values_formatted <- if (is.numeric(states[[var_to_map()]])) {
-      # Check if this is a cost-related variable
-      is_cost_var <- grepl("^ZVWK|KOSTEN", var_to_map(), ignore.case = TRUE)
+      # Check if this is a cost-related variable (exclude _user variables which are proportions)
+      is_cost_var <- grepl("^ZVWK|KOSTEN", var_to_map(), ignore.case = TRUE) && !grepl("_user$", var_to_map())
       
       # Check if values are large numbers (hundreds, thousands, or more)
       max_value <- max(abs(states[[var_to_map()]]), na.rm = TRUE)
@@ -375,7 +375,7 @@ wijken_server <- function(input, output, session, current_language = reactive("e
                   group = ~WKC) %>%
       hideGroup(group = states$WKC)  %>%
       addLegend(pal = paletteNum, values = states[[var_to_map()]],
-                title = paste( "<small>", ifelse(is.null(var_def_label_dict[[var_to_map()]]), var_to_map(), var_def_label_dict[[var_to_map()]]), "<br>", get_text("per_wijk_label", lang), "</small>"),
+                title = paste( "<small>", var_label, "<br>", get_text("per_wijk_label", lang), "</small>"),
                 position = 'topleft') %>%
       onRender(paste("<script>", "map.doubleClickZoom.disable();", "</script>", sep = ""))
   })
@@ -515,8 +515,8 @@ wijken_server <- function(input, output, session, current_language = reactive("e
       # Helper function for smart number formatting
       format_chart_value <- function(values, var_name) {
         if (is.numeric(values)) {
-          # Check if this is a cost-related variable
-          is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+          # Check if this is a cost-related variable (exclude _user variables which are proportions)
+          is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE) && !grepl("_user$", var_name)
           
           # Check if values are large numbers (hundreds, thousands, or more)
           max_value <- max(abs(values), na.rm = TRUE)
@@ -590,8 +590,8 @@ wijken_server <- function(input, output, session, current_language = reactive("e
     # Helper function for smart number formatting
     format_chart_value <- function(values, var_name) {
       if (is.numeric(values)) {
-        # Check if this is a cost-related variable
-        is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+        # Check if this is a cost-related variable (exclude _user variables which are proportions)
+        is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE) && !grepl("_user$", var_name)
         
         # Check if values are large numbers (hundreds, thousands, or more)
         max_value <- max(abs(values), na.rm = TRUE)

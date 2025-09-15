@@ -76,6 +76,12 @@ gemeente_server <- function(input, output, session, current_language = reactive(
     get_text("generate_report", lang)
   })
   
+  output$gem_map_missing_banner <- renderUI({
+    lang <- current_language()
+    if (is.null(lang) || length(lang) == 0) lang <- "en"
+    get_text("map_missing_banner", lang)
+  })
+  
   # Reactive expressions for Gemeente
   gem_var_to_map <- reactive({
     input$gem_drop_var_id
@@ -359,8 +365,8 @@ gemeente_server <- function(input, output, session, current_language = reactive(
     
     # Format the variable value with proper decimal places and comma separators
     gem_var_values_formatted <- if (is.numeric(gem_states[[gem_var_to_map()]])) {
-      # Check if this is a cost-related variable
-      is_cost_var <- grepl("^ZVWK|KOSTEN", gem_var_to_map(), ignore.case = TRUE)
+      # Check if this is a cost-related variable (exclude _user variables which are proportions)
+      is_cost_var <- grepl("^ZVWK|KOSTEN", gem_var_to_map(), ignore.case = TRUE) && !grepl("_user$", gem_var_to_map())
       
       # Check if values are large numbers (hundreds, thousands, or more)
       max_value <- max(abs(gem_states[[gem_var_to_map()]]), na.rm = TRUE)
@@ -417,7 +423,7 @@ gemeente_server <- function(input, output, session, current_language = reactive(
                   group = ~GMC) %>%
       hideGroup(group = gem_states$GMC)  %>%
       addLegend(pal = gem_paletteNum, values = gem_states[[gem_var_to_map()]],
-                title = paste( "<small>", ifelse(is.null(var_def_label_dict[[gem_var_to_map()]]), gem_var_to_map(), var_def_label_dict[[gem_var_to_map()]]), "<br>", get_text("per_gemeente_label", lang), "</small>"),
+                title = paste( "<small>", gem_var_label, "<br>", get_text("per_gemeente_label", lang), "</small>"),
                 position = 'topleft') %>%
       onRender(paste("<script>", "map.doubleClickZoom.disable();", "</script>", sep = ""))
   })
@@ -549,8 +555,8 @@ gemeente_server <- function(input, output, session, current_language = reactive(
       # Helper function for smart number formatting
       format_chart_value <- function(values, var_name) {
         if (is.numeric(values)) {
-          # Check if this is a cost-related variable
-          is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+          # Check if this is a cost-related variable (exclude _user variables which are proportions)
+          is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE) && !grepl("_user$", var_name)
           
           # Check if values are large numbers (hundreds, thousands, or more)
           max_value <- max(abs(values), na.rm = TRUE)
@@ -629,8 +635,8 @@ gemeente_server <- function(input, output, session, current_language = reactive(
     # Helper function for smart number formatting
     format_chart_value <- function(values, var_name) {
       if (is.numeric(values)) {
-        # Check if this is a cost-related variable
-        is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE)
+        # Check if this is a cost-related variable (exclude _user variables which are proportions)
+        is_cost_var <- grepl("^ZVWK|KOSTEN", var_name, ignore.case = TRUE) && !grepl("_user$", var_name)
         
         # Check if values are large numbers (hundreds, thousands, or more)
         max_value <- max(abs(values), na.rm = TRUE)

@@ -85,7 +85,10 @@ english_text <- list(
   "delft_area" = "Delft en omstreken",
   "leiden_area" = "Leiden en omstreken",
   "denhaag_area" = "s-gravenhage en omstreken",
-  "hadoks_area" = "Hadoks' area"
+  "hadoks_area" = "Hadoks' area",
+  
+  # Banner messages
+  "map_missing_banner" = "Please Select a new variable input from Control Panel above, if the map is missing or not displayed"
 )
 
 # Language dictionary for Dutch
@@ -172,7 +175,10 @@ dutch_text <- list(
   "delft_area" = "Delft en omstreken",
   "leiden_area" = "Leiden en omstreken",
   "denhaag_area" = "s-gravenhage en omstreken",
-  "hadoks_area" = "Hadoks' gebied"
+  "hadoks_area" = "Hadoks' gebied",
+  
+  # Banner messages
+  "map_missing_banner" = "Selecteer een nieuwe variabele invoer uit het \"Control Panel\" hierboven, als de kaart ontbreekt of niet wordt weergegeven"
 )
 
 # Function to extract latest date from changelog

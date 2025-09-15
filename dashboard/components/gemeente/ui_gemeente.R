@@ -91,6 +91,16 @@ gemeente_ui <- function() {
       )
     )
   ),
+  # Banner for map missing notice
+  fluidRow(
+    column(12,
+      div(
+        class = "alert alert-warning",
+        style = "background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin-bottom: 20px; font-weight: bold; text-align: center;",
+        uiOutput("gem_map_missing_banner")
+      )
+    )
+  ),
   fluidRow(
     column(8,
            fluidRow(

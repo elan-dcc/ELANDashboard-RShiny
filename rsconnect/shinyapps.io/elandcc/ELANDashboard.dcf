@@ -5,7 +5,7 @@ account: elandcc
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 15079322
-bundleId: 10885795
+bundleId: 10907266
 url: https://elandcc.shinyapps.io/ELANDashboard/
 version: 1
 asMultiple: FALSE

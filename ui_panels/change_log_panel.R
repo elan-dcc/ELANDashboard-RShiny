@@ -18,7 +18,9 @@ change_log_panel <- function() {
           tags$li("Implemented simple report generator for chosen areas (accessible by clicking on map or bar chart)"),
           tags$li("Updated to the latest 2024 data, with some variables still available only until 2022"),
           tags$li("Added multi-language support (Dutch/English)"),
-          tags$li("Fixed are related to Nieuwkoop and Rijswijk")
+          tags$li("Fixed area boundary related to Nieuwkoop and Rijswijk"),
+          tags$li("Change decimal points and thousand numeric label in the visualization"),
+          tags$li("Add warning banner for Gementee tab, for showing map - On going fix.")
         ),
         p("2. Area Coverage :"),
         tags$ul(
