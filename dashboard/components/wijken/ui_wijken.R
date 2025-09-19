@@ -53,7 +53,7 @@ wijken_ui <- function() {
                ),
                div(
                  style = "margin-top: 10px; text-align: right;",
-                 actionButton("clear_button_wijken", uiOutput("clear_all_button_text"))
+                 actionButton("clear_button_wijken", "Clear All")
                ),
                div(
                  style = "margin-top: 5px; font-size: 12px; color: #333; display: flex; align-items: center; gap: 5px;",

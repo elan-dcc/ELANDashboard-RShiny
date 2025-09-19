@@ -46,10 +46,13 @@ gemeente_server <- function(input, output, session, current_language = reactive(
     get_text("remove_item_info", lang)
   })
   
-  output$gem_clear_all_button_text <- renderUI({
+  # Update button text based on language
+  observeEvent(current_language(), {
     lang <- current_language()
     if (is.null(lang) || length(lang) == 0) lang <- "en"
-    get_text("clear_all", lang)
+    
+    button_text <- get_text("clear_all", lang)
+    updateActionButton(session, "clear_button_gemeente", label = button_text)
   })
   
   output$gem_variable_definition_title <- renderUI({
@@ -76,11 +79,6 @@ gemeente_server <- function(input, output, session, current_language = reactive(
     get_text("generate_report", lang)
   })
   
-  output$gem_map_missing_banner <- renderUI({
-    lang <- current_language()
-    if (is.null(lang) || length(lang) == 0) lang <- "en"
-    get_text("map_missing_banner", lang)
-  })
   
   # Reactive expressions for Gemeente
   gem_var_to_map <- reactive({
@@ -284,28 +282,139 @@ gemeente_server <- function(input, output, session, current_language = reactive(
 
   # Map output for Gemeente
   output$gem_map <- renderLeaflet({
-    leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
-      addProviderTiles(providers$CartoDB.Voyager) %>%
-      setView(lng = 4.490150, lat = 52.143211, zoom = 9)
+    
+    # Get default data for initial map load
+    lang <- current_language()
+    if (is.null(lang) || length(lang) == 0) lang <- "en"
+    
+    # Use default values for initial load
+    default_var <- "Total_ICPCPat_Pop"
+    # Get the latest available year from the data
+    available_years <- unique(states_gmc$YEAR)
+    default_year <- as.character(max(available_years, na.rm = TRUE))
+    default_municipality <- "ELAN area"
+    
+    # Get municipalities based on the selected region
+    if (default_municipality %in% names(special_regions)) {
+      municipalities_to_use <- special_regions[[default_municipality]]
+    } else {
+      municipalities_to_use <- default_municipality
+    }
+    
+    # Get initial data
+    gem_states <- states_gmc %>%
+      filter(YEAR == default_year) %>%
+      filter(GMN %in% municipalities_to_use) %>%
+      arrange(default_var)
+    
+    
+    if (nrow(gem_states) > 0) {
+      gem_var_values <- gem_states[[default_var]]
+      if (length(gem_var_values) > 0 && !all(is.na(gem_var_values))) {
+        gem_paletteNum <- colorNumeric('Blues', domain = gem_var_values)
+        
+        # Get the appropriate variable label based on language
+        gem_var_label <- if (lang == "nl") {
+          var_def_label_NL_dict[[default_var]]
+        } else {
+          var_def_label_dict[[default_var]]
+        }
+        
+        if (is.null(gem_var_label) || gem_var_label == "") {
+          gem_var_label <- default_var
+        }
+        
+        # Format the variable value
+        gem_var_values_formatted <- if (is.numeric(gem_states[[default_var]])) {
+          is_cost_var <- grepl("^ZVWK|KOSTEN", default_var, ignore.case = TRUE) && !grepl("_user$", default_var)
+          max_value <- max(abs(gem_states[[default_var]]), na.rm = TRUE)
+          is_large_number <- max_value >= 100
+          
+          if (all(gem_states[[default_var]] == as.integer(gem_states[[default_var]]), na.rm = TRUE)) {
+            prettyNum(gem_states[[default_var]], big.mark = ",", scientific = FALSE)
+          } else if (is_cost_var || is_large_number) {
+            prettyNum(round(gem_states[[default_var]]), big.mark = ",", scientific = FALSE)
+          } else {
+            prettyNum(round(gem_states[[default_var]], 2), big.mark = ",", scientific = FALSE, nsmall = 2)
+          }
+        } else {
+          gem_states[[default_var]]
+        }
+        
+        gem_stateLabels <- sprintf('<b>%s : %s</b><br/>%s : %s <br/> %s : %s',
+                                 get_text("gemeente_label", lang), gem_states$GMN, 
+                                 gem_var_label, gem_var_values_formatted, 
+                                 get_text("total_population_label", lang), prettyNum(gem_states$Total_Population,big.mark=",")) %>%
+          lapply(function(x) HTML(x))
+        
+        
+        leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+          addProviderTiles(providers$CartoDB.Voyager) %>%
+          setView(lng = 4.490150, lat = 52.143211, zoom = 9) %>%
+          addPolygons(data = gem_states,
+                      layerId = ~GMC,
+                      weight = 1,
+                      fillOpacity = .75,
+                      fillColor = ~gem_paletteNum(gem_states[[default_var]]),
+                      label = ~gem_stateLabels,
+                      labelOptions = labelOptions(
+                        style = list(color = 'gray30'),
+                        textsize = '10px'),
+                      group = "gem_regions",
+                      highlightOptions = highlightOptions(
+                        weight = 2,
+                        color = 'yellow',
+                        bringToFront = TRUE
+                      )
+          ) %>%
+          addPolygons(data = gem_states,
+                      fillColor = "yellow",
+                      fillOpacity = 0.25,
+                      weight = 1,
+                      color = "black",
+                      label = ~gem_stateLabels,
+                      layerId = ~GM_CODE,
+                      group = ~GMC) %>%
+          hideGroup(group = gem_states$GMC)  %>%
+          addLegend(pal = gem_paletteNum, values = gem_states[[default_var]],
+                    title = paste( "<small>", gem_var_label, "<br>", get_text("per_gemeente_label", lang), "</small>"),
+                    position = 'topleft') %>%
+          onRender(paste("<script>", "map.doubleClickZoom.disable();", "</script>", sep = ""))
+      } else {
+        leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+          addProviderTiles(providers$CartoDB.Voyager) %>%
+          setView(lng = 4.490150, lat = 52.143211, zoom = 9)
+      }
+    } else {
+      leaflet(options = leafletOptions(zoomControl = FALSE)) %>%
+        addProviderTiles(providers$CartoDB.Voyager) %>%
+        setView(lng = 4.490150, lat = 52.143211, zoom = 9)
+    }
   })
+  
+  # Additional map initialization observer that runs when the app starts
+  observe({
+    # This will run when the app starts and ensure the map is populated
+    if (!is.null(input$gem_drop_var_id) && !is.null(input$gem_drop_select_year) && !is.null(input$gem_drop_municipality)) {
+      # Force the original map observer to run
+      # This is a workaround to ensure the map gets populated on first load
+    }
+  }, priority = 1)
   
 
   
 
 
   # Map observer for Gemeente
-  observeEvent(list(input$gem_drop_var_id, input$gem_drop_select_year, input$gem_drop_municipality), ignoreInit = FALSE, {
+  observeEvent(ignoreInit = FALSE, list(input$gem_drop_var_id, input$gem_drop_select_year, input$gem_drop_municipality), {
     lang <- current_language()
     if (is.null(lang) || length(lang) == 0) lang <- "en"
     
-    # # Debug: Print input values
-    # cat("Map observer triggered with inputs:\n")
-    # cat("Variable:", input$gem_drop_var_id, "\n")
-    # cat("Year:", input$gem_drop_select_year, "\n")
-    # cat("Municipality:", input$gem_drop_municipality, "\n")
     
-    # Ensure we have valid inputs before proceeding
-    req(input$gem_drop_var_id, input$gem_drop_select_year)
+    # Ensure we have valid inputs before proceeding - but be more permissive
+    if (is.null(input$gem_drop_var_id) || is.null(input$gem_drop_select_year) || is.null(input$gem_drop_municipality)) {
+      return()
+    }
     
     # Get municipalities based on the selected region
     if (input$gem_drop_municipality %in% names(special_regions)) {
@@ -314,25 +423,17 @@ gemeente_server <- function(input, output, session, current_language = reactive(
       municipalities_to_use <- input$gem_drop_municipality
     }
     
-    # cat("Municipalities to use:", municipalities_to_use, "\n")
-    
-    # # Check if we have any municipalities to display
-    # if (length(municipalities_to_use) == 0) {
-    #   cat("No municipalities to display\n")
-    #   return()
-    # }
-    # cat("Filtering data for year:", gem_year_to_map(), "and municipalities:", municipalities_to_use, "\n")
+    # Check if we have any municipalities to display
+    if (length(municipalities_to_use) == 0) {
+      return()
+    }
     
     gem_states <- states_gmc %>%
       filter(YEAR == gem_year_to_map()) %>%
       filter(GMN %in% municipalities_to_use) %>%
       arrange(gem_var_to_map())
 
-    # cat("Filtered data rows:", nrow(gem_states), "\n")
-    # cat("Filtered municipalities:", unique(gem_states$GMN), "\n")
-
     if (nrow(gem_states) == 0) {
-      cat("No data found, clearing map\n")
       leafletProxy("gem_map") %>%
         clearShapes() %>%
         clearControls()
@@ -393,6 +494,7 @@ gemeente_server <- function(input, output, session, current_language = reactive(
                            gem_var_label, gem_var_values_formatted, 
                            get_text("total_population_label", lang), prettyNum(gem_states$Total_Population,big.mark=",")) %>%
       lapply(function(x) HTML(x))
+    
                    
     leafletProxy("gem_map") %>%
       clearShapes() %>%

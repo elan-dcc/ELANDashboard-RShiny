@@ -58,7 +58,7 @@ gemeente_ui <- function() {
                    bsicons::bs_icon("info-circle", size = 0.8),
                    textOutput("remove_item_info_text")
                  ),
-                 actionButton("clear_button_gemeente", uiOutput("gem_clear_all_button_text"))
+                 actionButton("clear_button_gemeente", "Clear All")
                )
         )
       )
@@ -88,16 +88,6 @@ gemeente_ui <- function() {
           h5(uiOutput("gem_data_source_title"), class = "page-heading"),
           uiOutput('data_source_gemeente')
         )
-      )
-    )
-  ),
-  # Banner for map missing notice
-  fluidRow(
-    column(12,
-      div(
-        class = "alert alert-warning",
-        style = "background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin-bottom: 20px; font-weight: bold; text-align: center;",
-        uiOutput("gem_map_missing_banner")
       )
     )
   ),

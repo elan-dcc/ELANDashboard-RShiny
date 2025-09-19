@@ -41,8 +41,13 @@ wijken_server <- function(input, output, session, current_language = reactive("e
     }
   })
   
-  output$clear_all_button_text <- renderUI({
-    get_text("clear_all", current_language())
+  # Update button text based on language
+  observeEvent(current_language(), {
+    lang <- current_language()
+    if (is.null(lang) || length(lang) == 0) lang <- "en"
+    
+    button_text <- get_text("clear_all", lang)
+    updateActionButton(session, "clear_button_wijken", label = button_text)
   })
   
   output$variable_definition_title <- renderUI({
@@ -381,7 +386,7 @@ wijken_server <- function(input, output, session, current_language = reactive("e
   })
   
   # Map click handler for Wijken
-  observeEvent(input$map_shape_click, {
+  observeEvent(input$map_shape_click, ignoreInit = FALSE, {
     if(input$map_shape_click$group == "regions" ){
       selected_map$groups <- c(selected_map$groups, input$map_shape_click$id)
       

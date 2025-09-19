@@ -20,7 +20,8 @@ change_log_panel <- function() {
           tags$li("Added multi-language support (Dutch/English)"),
           tags$li("Fixed area boundary related to Nieuwkoop and Rijswijk"),
           tags$li("Change decimal points and thousand numeric label in the visualization"),
-          tags$li("Add warning banner for Gementee tab, for showing map - On going fix.")
+          tags$li("Add warning banner for Gementee tab, for showing map - On going fix."),
+          tags$li("Remove banner and fixed map intialization "),
         ),
         p("2. Area Coverage :"),
         tags$ul(
